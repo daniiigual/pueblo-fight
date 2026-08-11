@@ -3,7 +3,7 @@ const TEAM_SIZE = 3;
 const START_MONEY = 30;
 const QUALIFIERS = 4;
 const CONFIG_KEY = "puebloFightV2Config";
-const GAME_KEY = "puebloFightV6Game";
+const GAME_KEY = "puebloFightV7Game";
 
 const $ = id => document.getElementById(id);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -15,6 +15,8 @@ const shuffle = arr => {
 };
 const esc = v => String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const attr = esc;
+
+let duelUi = null;
 
 let config = loadConfig();
 let game = loadGame();
@@ -624,6 +626,19 @@ function exchangeEventText(round,fa,fb){
   const winner=round.winnerId===fa.id?fa:fb;
   return `⚔️ ${winner.name} se lleva el intercambio.`;
 }
+function getUiStage(r){
+  if(!duelUi) return null;
+  if(duelUi.matchKey!==r.matchKey) return null;
+  if(duelUi.duelIndex!==r.duelIndex) return null;
+  if(duelUi.exchangeIndex!==r.exchangeIndex) return null;
+  return duelUi.stage;
+}
+function uiStageText(stage,fa,fb){
+  if(stage==="rollA") return `🎲 Tirando el dado de ${fa.name}...`;
+  if(stage==="revealA") return `✅ ${fa.name} ya ha lanzado. Ahora le toca a ${fb.name}.`;
+  if(stage==="rollB") return `🎲 Tirando el dado de ${fb.name}...`;
+  return "Listos para tirar.";
+}
 function renderDuelStage(){
   const r=game.tournament.reveal,m=currentTournamentMatch();
   const a=playerById(m.aId),b=playerById(m.bId);
@@ -635,6 +650,8 @@ function renderDuelStage(){
   const resolved=r.resolved;
   const duelFinished=resolved && r.exchangeIndex===d.rounds.length-1;
   const isLastDuel=r.duelIndex===TEAM_SIZE-1;
+  const uiStage=getUiStage(r);
+  const animating=!!uiStage;
 
   $("tournamentStage").innerHTML=`
     <div class="panel tournamentStep">
@@ -657,10 +674,19 @@ function renderDuelStage(){
           <span><b>${hb}</b> ${esc(fb.name)}</span>
         </div>
 
+        <div class="rollDirector ${animating?"active":""}">
+          <div class="rollDirectorLabel">${animating?esc(uiStageText(uiStage,fa,fb)):"🎲 Dos dados. Un golpe. Que ruede la suerte."}</div>
+          <div class="rollProgress">
+            <span class="${uiStage==='rollA' || uiStage==='revealA' || uiStage==='rollB' || resolved ? 'done':''}">${esc(fa.name)}</span>
+            <i></i>
+            <span class="${uiStage==='rollB' || resolved ? 'done':''}">${esc(fb.name)}</span>
+          </div>
+        </div>
+
         <div class="duelFighters">
-          ${diceFighterHtml(fa,d,true,resolved,round)}
+          ${diceFighterHtml(fa,d,true,resolved,round,uiStage)}
           <div class="bigVs">VS</div>
-          ${diceFighterHtml(fb,d,false,resolved,round)}
+          ${diceFighterHtml(fb,d,false,resolved,round,uiStage)}
         </div>
 
         ${resolved?`
@@ -685,7 +711,9 @@ function renderDuelStage(){
                 ? (isLastDuel?"Ver ganador del combate":"Siguiente enfrentamiento")
                 : "Siguiente tirada"
             }</button>`
-          : `<button id="resolveDuelBtn" class="btn giant">🎲 Que rueden los dados</button>`
+          : animating
+            ? `<div class="animLock">🎬 Lanzamiento en curso…</div>`
+            : `<button id="resolveDuelBtn" class="btn giant">🎲 Lanzar dados uno a uno</button>`
         }
       </div>
     </div>`;
@@ -701,18 +729,33 @@ function renderDuelStage(){
       }else{
         r.exchangeIndex++;r.resolved=false;
       }
+      duelUi=null;
       saveGame();renderTournament();
     });
-  }else{
+  }else if(!animating){
     $("resolveDuelBtn").addEventListener("click",runCountdownAndReveal);
   }
 }
-function diceFighterHtml(f,d,isA,resolved,round){
+function dieViewState(isA,resolved,uiStage,round){
+  if(resolved) return {mode:"revealed", roll:isA?round.rollA:round.rollB};
+  if(!uiStage) return {mode:"hidden", roll:null};
+  if(isA){
+    if(uiStage==="rollA") return {mode:"rolling", roll:null};
+    if(uiStage==="revealA" || uiStage==="rollB") return {mode:"revealed", roll:round.rollA};
+    return {mode:"hidden", roll:null};
+  }else{
+    if(uiStage==="rollB") return {mode:"rolling", roll:null};
+    return {mode:"hidden", roll:null};
+  }
+}
+function diceFighterHtml(f,d,isA,resolved,round,uiStage){
   const bonus=isA?d.bonusA:d.bonusB;
   const chance=isA?d.chanceA:1-d.chanceA;
-  const roll=isA?round.rollA:round.rollB;
+  const state=dieViewState(isA,resolved,uiStage,round);
+  const roll=state.roll;
   const naturalSpecial=resolved && (roll===1||roll===6);
-  return `<div class="duelFighter">
+  const spotlight = uiStage && ((isA && (uiStage==="rollA" || uiStage==="revealA")) || (!isA && uiStage==="rollB"));
+  return `<div class="duelFighter ${spotlight?"spotlightCard":""}">
     <div class="fighterAvatarBig">${initials(f.name)}</div>
     <h3>${esc(f.name)}</h3>
     <div class="duelMean">${overall(f)}<small>media</small></div>
@@ -723,38 +766,70 @@ function diceFighterHtml(f,d,isA,resolved,round){
     </div>
     <div class="bonusLine">Bono por media <b>+${bonus}</b></div>
 
-    <div class="dieBox ${resolved?"revealed":"rolling"} ${naturalSpecial?"naturalSpecial":""}">
-      <div class="dieFace">${resolved?diceChar(roll):"?"}</div>
-      <div class="dieNumber">${resolved?`Dado ${roll}`:"Dado oculto"}</div>
+    <div class="dieBox ${state.mode} ${naturalSpecial?"naturalSpecial":""}">
+      <div class="dieFace">${state.mode==="revealed"?diceChar(roll):(state.mode==="rolling"?"🎲":"?")}</div>
+      <div class="dieNumber">${
+        state.mode==="revealed"?`Dado ${roll}`:
+        state.mode==="rolling"?"Rodando…":"Dado oculto"
+      }</div>
     </div>
 
-    ${resolved && roll!==1 && roll!==6
+    ${state.mode==="revealed" && roll!==1 && roll!==6
       ? `<div class="totalLine">${roll} + ${bonus} = <b>${roll+bonus}</b></div>`
-      : resolved
+      : state.mode==="revealed"
         ? `<div class="totalLine"><b>${roll===6?"CRÍTICO":"FALLO"}</b></div>`
-        : `<div class="totalLine">Esperando tirada…</div>`
+        : state.mode==="rolling"
+          ? `<div class="totalLine">El pueblo contiene la respiración…</div>`
+          : `<div class="totalLine">Esperando tirada…</div>`
     }
   </div>`;
 }
 function runCountdownAndReveal(){
   const btn=$("resolveDuelBtn");
   if(btn)btn.disabled=true;
+
   const overlay=document.createElement("div");
   overlay.className="countdownOverlay";
   document.body.appendChild(overlay);
+
   let values=["3","2","1","¡YA!"],i=0;
   const tick=()=>{
-    overlay.innerHTML=`<div class="countdownNumber" key="${i}">${values[i]}</div>`;
-    // Reinicia la animación cambiando el nodo.
+    overlay.innerHTML=`<div class="countdownNumber">${values[i]}</div>`;
     i++;
-    if(i<values.length)setTimeout(tick,580);
-    else setTimeout(()=>{
-      overlay.remove();
-      game.tournament.reveal.resolved=true;
-      saveGame();renderTournament();
-    },520);
+    if(i<values.length){
+      setTimeout(tick,560);
+    }else{
+      setTimeout(()=>{
+        overlay.remove();
+        startSequentialDiceReveal();
+      },460);
+    }
   };
   tick();
+}
+function startSequentialDiceReveal(){
+  const r=game.tournament.reveal;
+  duelUi={matchKey:r.matchKey,duelIndex:r.duelIndex,exchangeIndex:r.exchangeIndex,stage:"rollA"};
+  renderTournament();
+
+  setTimeout(()=>{
+    if(!duelUi) return;
+    duelUi.stage="revealA";
+    renderTournament();
+  },950);
+
+  setTimeout(()=>{
+    if(!duelUi) return;
+    duelUi.stage="rollB";
+    renderTournament();
+  },1700);
+
+  setTimeout(()=>{
+    duelUi=null;
+    game.tournament.reveal.resolved=true;
+    saveGame();
+    renderTournament();
+  },2800);
 }
 function renderMatchWinner(){
   const r=game.tournament.reveal,m=currentTournamentMatch();

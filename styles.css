@@ -614,3 +614,109 @@ input:focus,select:focus{
   .version{max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .matchupTitle{font-size:29px}
 }
+
+
+/* ===== v7 · lanzamiento de dados secuencial y más visual ===== */
+.rollDirector{
+  margin:0 0 14px;
+  padding:12px 13px;
+  border-radius:16px;
+  border:1px solid rgba(225,185,87,.18);
+  background:linear-gradient(180deg,#171612,#12110e);
+  text-align:center;
+}
+.rollDirector.active{
+  border-color:rgba(225,185,87,.34);
+  box-shadow:0 10px 26px rgba(0,0,0,.20), inset 0 0 0 1px rgba(255,255,255,.02);
+}
+.rollDirectorLabel{
+  font-size:12px;
+  font-weight:900;
+  color:#f2e3bc;
+  margin-bottom:9px;
+}
+.rollProgress{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:8px;
+  align-items:center;
+}
+.rollProgress span{
+  display:block;
+  padding:8px 10px;
+  border-radius:999px;
+  background:#11110e;
+  border:1px solid #39362b;
+  color:#9f9887;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.rollProgress span.done{
+  color:#f4ead2;
+  border-color:#796431;
+  background:linear-gradient(180deg,#241f13,#15130f);
+}
+.rollProgress i{
+  width:22px;
+  height:2px;
+  background:linear-gradient(90deg,rgba(225,185,87,.2),rgba(225,185,87,.55),rgba(225,185,87,.2));
+  border-radius:999px;
+}
+.animLock{
+  min-height:48px;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  background:#171612;
+  border:1px solid #3b382d;
+  color:#f1deae;
+  font-weight:900;
+  font-size:13px;
+}
+.spotlightCard{
+  border-color:#8a6f31 !important;
+  box-shadow:0 0 0 1px rgba(225,185,87,.15), 0 14px 30px rgba(225,185,87,.08);
+}
+.dieBox.hidden{
+  background:#1b1a16;
+  color:#726d61;
+  border-color:#3d392e;
+  box-shadow:none;
+}
+.dieBox.hidden .dieFace{
+  font-size:44px;
+  opacity:.7;
+}
+.dieBox.rolling{
+  background:#efe5ce;
+  color:#18150f;
+  border-color:#f7eed9;
+  box-shadow:0 12px 30px rgba(0,0,0,.42);
+}
+.dieBox.rolling .dieFace{
+  animation:dieShake .72s ease-in-out infinite, dieFlash .9s linear infinite;
+}
+.dieBox.rolling .dieNumber{
+  color:#7b6944;
+}
+@keyframes dieShake{
+  0%{transform:translate(0,0) rotate(0deg) scale(1)}
+  18%{transform:translate(-4px,-2px) rotate(-9deg) scale(1.03)}
+  36%{transform:translate(5px,3px) rotate(8deg) scale(.98)}
+  54%{transform:translate(-3px,2px) rotate(-6deg) scale(1.02)}
+  72%{transform:translate(4px,-3px) rotate(7deg) scale(.99)}
+  100%{transform:translate(0,0) rotate(0deg) scale(1)}
+}
+@keyframes dieFlash{
+  0%,100%{filter:drop-shadow(0 0 0 rgba(225,185,87,0))}
+  50%{filter:drop-shadow(0 0 10px rgba(225,185,87,.36))}
+}
+.dieBox.revealed{
+  animation:diePop .24s ease-out both;
+}
+@keyframes diePop{
+  0%{transform:scale(.85);opacity:.4}
+  100%{transform:scale(1);opacity:1}
+}
