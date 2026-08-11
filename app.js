@@ -3,8 +3,7 @@ const TEAM_SIZE = 3;
 const START_MONEY = 30;
 const QUALIFIERS = 4;
 const CONFIG_KEY = "puebloFightV2Config";
-const GAME_KEY = "puebloFightV2Game";
-const STYLES = ["Bruto","Técnico","Ágil"];
+const GAME_KEY = "puebloFightV5Game";
 
 const $ = id => document.getElementById(id);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -24,8 +23,8 @@ function defaultConfig(){
   const names=["El Pana","La Chispa","Toni Martillo","María la Fiera","El Zurdo","Paco Turbo","La Nati","Juanito Hierro","Marta Flash","El Chato","Rosi Técnica","Sergio Muro"];
   return {
     players:["Jugador 1","Jugador 2","Jugador 3","Jugador 4"].map(name=>({id:uid(),name})),
-    fighters:names.map((name,i)=>({
-      id:uid(),name,style:STYLES[i%3],
+    fighters:names.map(name=>({
+      id:uid(),name,
       power:50,technique:50,speed:50,stamina:50,grit:50
     }))
   };
@@ -33,7 +32,9 @@ function defaultConfig(){
 function loadConfig(){
   try{
     const raw=localStorage.getItem(CONFIG_KEY);
-    return raw ? JSON.parse(raw) : defaultConfig();
+    const cfg=raw ? JSON.parse(raw) : defaultConfig();
+    if(Array.isArray(cfg.fighters)) cfg.fighters.forEach(f=>{ if("style" in f) delete f.style; });
+    return cfg;
   }catch{return defaultConfig()}
 }
 function saveConfig(){
@@ -53,7 +54,7 @@ function clearGame(){
 }
 function setPhase(text){$("phasePill").textContent=text}
 function showOnly(id){
-  ["setupScreen","orderScreen","draftScreen","qualifierScreen","lineupCoverScreen","lineupScreen","resultsScreen"]
+  ["setupScreen","orderScreen","draftScreen","qualifierScreen","lineupCoverScreen","lineupScreen","tournamentScreen","resultsScreen"]
     .forEach(x=>$(x).classList.toggle("hidden",x!==id));
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -78,7 +79,7 @@ function ensureMinimumFighters(){
   const need=requiredFighters();
   while(config.fighters.length<need){
     const n=config.fighters.length+1;
-    config.fighters.push({id:uid(),name:`Luchador ${n}`,style:STYLES[(n-1)%3],power:50,technique:50,speed:50,stamina:50,grit:50});
+    config.fighters.push({id:uid(),name:`Luchador ${n}`,power:50,technique:50,speed:50,stamina:50,grit:50});
   }
 }
 function renderSetup(){
@@ -103,9 +104,6 @@ function fighterEditorHtml(f,i){
   return `<div class="fighterEditCard">
     <div class="fighterEditTop">
       <input class="fighterNameInput" data-fighter-id="${f.id}" value="${attr(f.name)}" maxlength="30" aria-label="Nombre luchador ${i+1}">
-      <select class="fighterStyleInput" data-fighter-id="${f.id}">
-        ${STYLES.map(s=>`<option ${s===f.style?"selected":""}>${s}</option>`).join("")}
-      </select>
       <button class="iconBtn removeFighter" data-fighter-id="${f.id}" ${config.fighters.length<=requiredFighters()?"disabled":""}>×</button>
     </div>
     <div class="statsEditor">
@@ -135,10 +133,6 @@ function bindSetupInputs(){
     const f=config.fighters.find(x=>x.id===e.target.dataset.fighterId);
     if(f){f.name=e.target.value;saveConfig()}
   }));
-  document.querySelectorAll(".fighterStyleInput").forEach(el=>el.addEventListener("change",e=>{
-    const f=config.fighters.find(x=>x.id===e.target.dataset.fighterId);
-    if(f){f.style=e.target.value;saveConfig()}
-  }));
   document.querySelectorAll(".fighterStatInput").forEach(el=>el.addEventListener("change",e=>{
     const f=config.fighters.find(x=>x.id===e.target.dataset.fighterId);
     if(!f)return;
@@ -159,7 +153,7 @@ function addPlayer(){
 }
 function addFighter(){
   const n=config.fighters.length+1;
-  config.fighters.push({id:uid(),name:`Luchador ${n}`,style:STYLES[(n-1)%3],power:50,technique:50,speed:50,stamina:50,grit:50});
+  config.fighters.push({id:uid(),name:`Luchador ${n}`,power:50,technique:50,speed:50,stamina:50,grit:50});
   renderSetup();
 }
 function validateSetup(){
@@ -308,7 +302,6 @@ function renderDraft(){
 }
 function fighterCardHtml(f){
   return `<div class="fighterName">${esc(f.name)}</div>
-    <span class="styleChip">${esc(f.style)}</span>
     <div class="statGrid">
       ${statHtml("FUE",f.power)}${statHtml("TEC",f.technique)}${statHtml("VEL",f.speed)}${statHtml("AGU",f.stamina)}${statHtml("COR",f.grit)}
     </div>
@@ -317,7 +310,7 @@ function fighterCardHtml(f){
 function statHtml(label,v){return `<div class="stat"><b>${Number(v)}</b><span>${label}</span></div>`}
 function rosterItemHtml(fid){
   const f=fighterById(fid);
-  return `<div class="rosterItem"><div class="avatar">${initials(f.name)}</div><div class="rosterMeta"><b>${esc(f.name)}</b><span>${esc(f.style)} · media ${overall(f)}</span></div></div>`;
+  return `<div class="rosterItem"><div class="avatar">${initials(f.name)}</div><div class="rosterMeta"><b>${esc(f.name)}</b><span>Media ${overall(f)}</span></div></div>`;
 }
 function teamCardHtml(p){
   const full=p.roster.length>=TEAM_SIZE;
@@ -370,9 +363,9 @@ function renderLineup(){
   const p=playerById(game.lineupQueue[game.lineupIndex]);
   $("lineupTeamName").textContent=p.name;
   const labels=[
-    ["1 · Apertura","Velocidad + Técnica"],
-    ["2 · Choque","Fuerza + Aguante"],
-    ["3 · Cierre","Coraje + Fuerza"]
+    ["1 · Primer enfrentamiento","Tu luchador 1 contra el luchador 1 rival"],
+    ["2 · Segundo enfrentamiento","Tu luchador 2 contra el luchador 2 rival"],
+    ["3 · Tercer enfrentamiento","Tu luchador 3 contra el luchador 3 rival"]
   ];
   $("lineupSlots").innerHTML=p.lineup.map((fid,i)=>`
     <div class="slot">
@@ -400,53 +393,372 @@ function saveCurrentLineup(){
   if(game.lineupIndex<game.lineupQueue.length){
     game.phase="lineupCover";saveGame();renderLineupCover();
   }else{
-    playTournament();
+    startTournament();
   }
 }
 
-function styleBonus(a,b){
-  const win={"Técnico":"Bruto","Bruto":"Ágil","Ágil":"Técnico"};
-  if(win[a]===b)return 6;
-  if(win[b]===a)return -6;
-  return 0;
+function combatBonuses(fa,fb){
+  // Única fuente de ventaja: diferencia de MEDIA GENERAL.
+  // Misma media = +0. 1–5 = +1. 6–12 = +2. 13+ = +3.
+  const diff=overall(fa)-overall(fb);
+  const ad=Math.abs(diff);
+  let advantage=0;
+  if(ad===0) advantage=0;
+  else if(ad<=5) advantage=1;
+  else if(ad<=12) advantage=2;
+  else advantage=3;
+  return diff>0?[advantage,0]:diff<0?[0,advantage]:[0,0];
 }
-function slotAffinity(f,pos){
-  if(pos===0)return f.speed*.5+f.technique*.5;
-  if(pos===1)return f.power*.5+f.stamina*.5;
-  return f.grit*.5+f.power*.5;
+function resolveExchange(rollA,rollB,bonusA,bonusB){
+  if(rollA===6 && rollB!==6)return "A";
+  if(rollB===6 && rollA!==6)return "B";
+  if(rollA===1 && rollB!==1)return "B";
+  if(rollB===1 && rollA!==1)return "A";
+  const totalA=rollA+bonusA,totalB=rollB+bonusB;
+  if(totalA>totalB)return "A";
+  if(totalB>totalA)return "B";
+  return "T";
 }
-function duelScore(f,pos,enemy){
-  const base=f.power*.25+f.technique*.22+f.speed*.19+f.stamina*.18+f.grit*.16;
-  const role=(slotAffinity(f,pos)-50)*.14;
-  const matchup=styleBonus(f.style,enemy.style);
-  const luck=Math.floor(Math.random()*11)-5;
-  return base+role+matchup+luck;
+function exchangeWinChance(bonusA,bonusB){
+  let a=0,b=0;
+  for(let ra=1;ra<=6;ra++){
+    for(let rb=1;rb<=6;rb++){
+      const r=resolveExchange(ra,rb,bonusA,bonusB);
+      if(r==="A")a++;else if(r==="B")b++;
+    }
+  }
+  return a/(a+b);
+}
+function duelWinChance(bonusA,bonusB){
+  const p=exchangeWinChance(bonusA,bonusB);
+  return p*p*(3-2*p);
+}
+function rollDie(){return Math.floor(Math.random()*6)+1}
+function makeExchange(fa,fb,bonusA,bonusB){
+  let rollA,rollB,result;
+  do{
+    rollA=rollDie();rollB=rollDie();
+    result=resolveExchange(rollA,rollB,bonusA,bonusB);
+  }while(result==="T");
+  let event="normal";
+  if(result==="A" && rollA===6 && rollB!==6)event="criticalA";
+  else if(result==="B" && rollB===6 && rollA!==6)event="criticalB";
+  else if(result==="B" && rollA===1 && rollB!==1)event="failA";
+  else if(result==="A" && rollB===1 && rollA!==1)event="failB";
+  return {
+    rollA,rollB,
+    totalA:rollA+bonusA,totalB:rollB+bonusB,
+    winnerId:result==="A"?fa.id:fb.id,event
+  };
+}
+function makeDuel(fa,fb,pos){
+  const [bonusA,bonusB]=combatBonuses(fa,fb);
+  const rounds=[];
+  let hitsA=0,hitsB=0;
+  while(hitsA<2 && hitsB<2){
+    const round=makeExchange(fa,fb,bonusA,bonusB);
+    rounds.push(round);
+    if(round.winnerId===fa.id)hitsA++;else hitsB++;
+  }
+  return {
+    pos:pos+1,faId:fa.id,fbId:fb.id,
+    bonusA,bonusB,
+    chanceA:duelWinChance(bonusA,bonusB),
+    rounds,winnerId:hitsA>hitsB?fa.id:fb.id,
+    hitsA,hitsB
+  };
 }
 function playMatch(a,b,label){
   let aw=0,bw=0;const duels=[];
   for(let i=0;i<TEAM_SIZE;i++){
     const fa=fighterById(a.lineup[i]),fb=fighterById(b.lineup[i]);
-    let sa=duelScore(fa,i,fb),sb=duelScore(fb,i,fa);
-    if(Math.abs(sa-sb)<.001)sa+=Math.random();
-    const winnerId=sa>sb?fa.id:fb.id;
-    if(winnerId===fa.id)aw++;else bw++;
-    duels.push({pos:i+1,faId:fa.id,fbId:fb.id,sa,sb,winnerId});
+    const duel=makeDuel(fa,fb,i);
+    if(duel.winnerId===fa.id)aw++;else bw++;
+    duels.push(duel);
   }
   return {label,aId:a.id,bId:b.id,aw,bw,winnerId:aw>bw?a.id:b.id,duels};
 }
-function playTournament(){
-  // Clasificación premia el draft: 1º vs 4º y 2º vs 3º.
+function startTournament(){
+  // El resultado se calcula una vez y se guarda; después solo lo vamos revelando.
+  // Así recargar Safari nunca cambia el ganador.
   const q=game.ranking.slice(0,QUALIFIERS).map(playerById);
   const semi1=playMatch(q[0],q[3],"Semifinal 1");
   const semi2=playMatch(q[1],q[2],"Semifinal 2");
   const final=playMatch(playerById(semi1.winnerId),playerById(semi2.winnerId),"FINAL");
-  game.tournament={semi1,semi2,final,championId:final.winnerId};
-  game.phase="results";saveGame();renderResults();
+  game.tournament={
+    semi1,semi2,final,championId:final.winnerId,
+    reveal:{matchKey:"semi1",stage:"intro",duelIndex:0,exchangeIndex:0,resolved:false}
+  };
+  game.phase="tournament";
+  saveGame();
+  renderTournament();
+}
+function currentTournamentMatch(){
+  return game.tournament[game.tournament.reveal.matchKey];
+}
+function tournamentSeed(playerId){
+  const i=game.ranking.indexOf(playerId);
+  return i>=0?i+1:"—";
+}
+function roundRole(pos){
+  return [
+    ["1 · PRIMER ENFRENTAMIENTO","Posición 1 contra posición 1"],
+    ["2 · SEGUNDO ENFRENTAMIENTO","Posición 2 contra posición 2"],
+    ["3 · TERCER ENFRENTAMIENTO","Posición 3 contra posición 3"]
+  ][pos];
+}
+function revealedScore(m){
+  const r=game.tournament.reveal;
+  let completed=r.duelIndex;
+  if(r.stage==="winner")completed=TEAM_SIZE;
+  else if(r.stage==="duel"){
+    const d=m.duels[r.duelIndex];
+    if(r.resolved && r.exchangeIndex===d.rounds.length-1)completed++;
+  }
+  let a=0,b=0;
+  m.duels.slice(0,completed).forEach(d=>d.winnerId===d.faId?a++:b++);
+  return [a,b];
+}
+function revealedHits(d){
+  const r=game.tournament.reveal;
+  const count=r.exchangeIndex+(r.resolved?1:0);
+  let a=0,b=0;
+  d.rounds.slice(0,count).forEach(x=>x.winnerId===d.faId?a++:b++);
+  return [a,b];
+}
+function renderTournament(){
+  setPhase(game.tournament.reveal.matchKey==="final"?"La Final":"Torneo");
+  showOnly("tournamentScreen");
+  const r=game.tournament.reveal;
+  if(r.stage==="intro") renderMatchIntro();
+  else if(r.stage==="duel") renderDuelStage();
+  else if(r.stage==="winner") renderMatchWinner();
+}
+function renderMatchIntro(){
+  const r=game.tournament.reveal,m=currentTournamentMatch();
+  const a=playerById(m.aId),b=playerById(m.bId);
+  const isFinal=r.matchKey==="final";
+  $("tournamentStage").innerHTML=`
+    <div class="panel tournamentHero tournamentStep">
+      <div class="roundTitle">${isFinal?"🔥 LA GRAN FINAL":esc(m.label)}</div>
+      <div class="matchupTitle">${esc(a.name)} <span class="matchupVs">VS</span> ${esc(b.name)}</div>
+      <div class="teamVsGrid">
+        ${teamIntroHtml(a)}
+        <div class="bigVs">VS</div>
+        ${teamIntroHtml(b)}
+      </div>
+      ${isFinal?`<div class="finalWarning">Aquí se decide el campeón. La media da ventaja, pero los dados pueden destrozar cualquier pronóstico.</div>`:
+      `<div class="cinematicNote">Cada duelo es al mejor de 3 golpes. Un 6 natural puede cambiarlo todo.</div>`}
+      <button id="enterMatchBtn" class="btn giant">${isFinal?"Entrar en la final":"Entrar al combate"}</button>
+    </div>`;
+  $("enterMatchBtn").addEventListener("click",()=>{
+    r.stage="duel";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;saveGame();renderTournament();
+  });
+}
+function teamIntroHtml(p){
+  return `<div class="teamIntro">
+    <span class="teamSeed">Cabeza de serie #${tournamentSeed(p.id)}</span>
+    <b>${esc(p.name)}</b>
+    <div class="teamMean">${playerAverage(p)}</div>
+    <span class="teamMeanLabel">media del equipo</span>
+  </div>`;
+}
+function diceChar(n){return ["","⚀","⚁","⚂","⚃","⚄","⚅"][n]||"?"}
+function chanceLabel(chance){
+  const pct=Math.round(chance*100);
+  if(pct>=78)return "Favorito claro";
+  if(pct>=65)return "Favorito";
+  if(pct>=55)return "Ligera ventaja";
+  if(pct<=22)return "Gran sorpresa si gana";
+  if(pct<=35)return "No favorito";
+  if(pct<=45)return "Ligera desventaja";
+  return "Muy igualado";
+}
+function exchangeEventText(round,fa,fb){
+  if(round.event==="criticalA")return `🔥 ¡6 NATURAL! ${fa.name} conecta un crítico.`;
+  if(round.event==="criticalB")return `🔥 ¡6 NATURAL! ${fb.name} conecta un crítico.`;
+  if(round.event==="failA")return `💥 ${fa.name} saca un 1 y falla por completo.`;
+  if(round.event==="failB")return `💥 ${fb.name} saca un 1 y falla por completo.`;
+  const winner=round.winnerId===fa.id?fa:fb;
+  return `⚔️ ${winner.name} se lleva el intercambio.`;
+}
+function renderDuelStage(){
+  const r=game.tournament.reveal,m=currentTournamentMatch();
+  const a=playerById(m.aId),b=playerById(m.bId);
+  const d=m.duels[r.duelIndex],fa=fighterById(d.faId),fb=fighterById(d.fbId);
+  const round=d.rounds[r.exchangeIndex];
+  const role=roundRole(r.duelIndex);
+  const [as,bs]=revealedScore(m);
+  const [ha,hb]=revealedHits(d);
+  const resolved=r.resolved;
+  const duelFinished=resolved && r.exchangeIndex===d.rounds.length-1;
+  const isLastDuel=r.duelIndex===TEAM_SIZE-1;
+
+  $("tournamentStage").innerHTML=`
+    <div class="panel tournamentStep">
+      <div class="roundTitle">${r.matchKey==="final"?"LA FINAL":esc(m.label)}</div>
+      <div class="scoreboard">
+        <div class="scoreboardTeam">${esc(a.name)}</div>
+        <div class="scoreboardScore">${as} – ${bs}</div>
+        <div class="scoreboardTeam right">${esc(b.name)}</div>
+      </div>
+
+      <div class="duelStage">
+        <div class="duelPosition">
+          <b>${role[0]}</b>
+          <span>${role[1]} · primero en conseguir 2 golpes</span>
+        </div>
+
+        <div class="duelHits">
+          <span>${esc(fa.name)} <b>${ha}</b></span>
+          <div>GOLPES</div>
+          <span><b>${hb}</b> ${esc(fb.name)}</span>
+        </div>
+
+        <div class="duelFighters">
+          ${diceFighterHtml(fa,d,true,resolved,round)}
+          <div class="bigVs">VS</div>
+          ${diceFighterHtml(fb,d,false,resolved,round)}
+        </div>
+
+        ${resolved?`
+          <div class="diceResultText ${round.event!=="normal"?"specialEvent":""}">
+            ${esc(exchangeEventText(round,fa,fb))}
+          </div>
+          ${duelFinished?`<div class="revealWinner">
+            <div class="eyebrow">DUELO TERMINADO</div>
+            <b>${esc(fighterById(d.winnerId).name)} gana ${d.hitsA}–${d.hitsB}</b>
+          </div>`:""}
+        `:""}
+      </div>
+
+      <div class="combatRuleHint">
+        <b>Regla:</b> 6 natural = crítico · 1 natural = fallo · si no, dado + bono por diferencia de media.
+      </div>
+
+      <div style="margin-top:13px">
+        ${resolved
+          ? `<button id="nextDuelBtn" class="btn giant">${
+              duelFinished
+                ? (isLastDuel?"Ver ganador del combate":"Siguiente enfrentamiento")
+                : "Siguiente tirada"
+            }</button>`
+          : `<button id="resolveDuelBtn" class="btn giant">🎲 Tirar los dados</button>`
+        }
+      </div>
+    </div>`;
+
+  if(resolved){
+    $("nextDuelBtn").addEventListener("click",()=>{
+      if(duelFinished){
+        if(isLastDuel){
+          r.stage="winner";
+        }else{
+          r.duelIndex++;r.exchangeIndex=0;r.resolved=false;
+        }
+      }else{
+        r.exchangeIndex++;r.resolved=false;
+      }
+      saveGame();renderTournament();
+    });
+  }else{
+    $("resolveDuelBtn").addEventListener("click",runCountdownAndReveal);
+  }
+}
+function diceFighterHtml(f,d,isA,resolved,round){
+  const bonus=isA?d.bonusA:d.bonusB;
+  const chance=isA?d.chanceA:1-d.chanceA;
+  const roll=isA?round.rollA:round.rollB;
+  const naturalSpecial=resolved && (roll===1||roll===6);
+  return `<div class="duelFighter">
+    <div class="fighterAvatarBig">${initials(f.name)}</div>
+    <h3>${esc(f.name)}</h3>
+    <div class="duelMean">${overall(f)}<small>media</small></div>
+
+    <div class="oddsLine">
+      <b>≈${Math.round(chance*100)}%</b>
+      <span>${chanceLabel(chance)}</span>
+    </div>
+    <div class="bonusLine">Bono por media <b>+${bonus}</b></div>
+
+    <div class="dieBox ${resolved?"revealed":"rolling"} ${naturalSpecial?"naturalSpecial":""}">
+      <div class="dieFace">${resolved?diceChar(roll):"?"}</div>
+      <div class="dieNumber">${resolved?`Dado ${roll}`:"Dado oculto"}</div>
+    </div>
+
+    ${resolved && roll!==1 && roll!==6
+      ? `<div class="totalLine">${roll} + ${bonus} = <b>${roll+bonus}</b></div>`
+      : resolved
+        ? `<div class="totalLine"><b>${roll===6?"CRÍTICO":"FALLO"}</b></div>`
+        : `<div class="totalLine">Esperando tirada…</div>`
+    }
+  </div>`;
+}
+function runCountdownAndReveal(){
+  const btn=$("resolveDuelBtn");
+  if(btn)btn.disabled=true;
+  const overlay=document.createElement("div");
+  overlay.className="countdownOverlay";
+  document.body.appendChild(overlay);
+  let values=["3","2","1","¡YA!"],i=0;
+  const tick=()=>{
+    overlay.innerHTML=`<div class="countdownNumber" key="${i}">${values[i]}</div>`;
+    // Reinicia la animación cambiando el nodo.
+    i++;
+    if(i<values.length)setTimeout(tick,580);
+    else setTimeout(()=>{
+      overlay.remove();
+      game.tournament.reveal.resolved=true;
+      saveGame();renderTournament();
+    },520);
+  };
+  tick();
+}
+function renderMatchWinner(){
+  const r=game.tournament.reveal,m=currentTournamentMatch();
+  const winner=playerById(m.winnerId);
+  const loser=playerById(m.winnerId===m.aId?m.bId:m.aId);
+  const winnerScore=m.winnerId===m.aId?m.aw:m.bw;
+  const loserScore=m.winnerId===m.aId?m.bw:m.aw;
+  const isFinal=r.matchKey==="final";
+  $("tournamentStage").innerHTML=`
+    <div class="panel matchWinnerStage tournamentStep">
+      <div class="winnerIcon">${isFinal?"🏆":"⚔️"}</div>
+      <div class="roundTitle">${isFinal?"FINAL TERMINADA":esc(m.label)+" TERMINADA"}</div>
+      <div class="matchWinnerName">${esc(winner.name)}</div>
+      <p>${isFinal
+        ? `ha ganado la final ${winnerScore}–${loserScore} y es el nuevo campeón de Pueblo Fight.`
+        : `elimina a ${esc(loser.name)} por ${winnerScore}–${loserScore} y avanza a la final.`}</p>
+      <button id="advanceTournamentBtn" class="btn giant">${nextTournamentButtonLabel()}</button>
+    </div>`;
+  $("advanceTournamentBtn").addEventListener("click",advanceTournament);
+}
+function nextTournamentButtonLabel(){
+  const key=game.tournament.reveal.matchKey;
+  if(key==="semi1")return "Ver segunda semifinal";
+  if(key==="semi2")return "Ir a la GRAN FINAL";
+  return "Coronar campeón";
+}
+function advanceTournament(){
+  const r=game.tournament.reveal;
+  if(r.matchKey==="semi1"){
+    r.matchKey="semi2";r.stage="intro";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;
+    saveGame();renderTournament();
+  }else if(r.matchKey==="semi2"){
+    r.matchKey="final";r.stage="intro";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;
+    saveGame();renderTournament();
+  }else{
+    game.phase="results";saveGame();renderResults();
+  }
 }
 function renderResults(){
   setPhase("Campeón");showOnly("resultsScreen");
   const champ=playerById(game.tournament.championId);
-  $("championCard").innerHTML=`<div class="eyebrow">🏆 CAMPEÓN DE PUEBLO FIGHT</div><div class="championName">${esc(champ.name)}</div><p>Media de equipo ${playerAverage(champ)} · ${champ.money} monedas sin gastar.</p>`;
+  $("championCard").innerHTML=`
+    <div class="eyebrow">🏆 CAMPEÓN DE PUEBLO FIGHT</div>
+    <div class="championName">${esc(champ.name)}</div>
+    <div class="championSubtitle">Sobrevivió al draft, a la semifinal y a la final.</div>
+    <p>Media de equipo ${playerAverage(champ)} · ${champ.money} monedas sin gastar.</p>`;
   $("tournamentResults").innerHTML=
     matchHtml(game.tournament.semi1)+matchHtml(game.tournament.semi2)+matchHtml(game.tournament.final);
 }
@@ -457,9 +769,9 @@ function matchHtml(m){
     ${m.duels.map(d=>{
       const fa=fighterById(d.faId),fb=fighterById(d.fbId);
       return `<div class="duel">
-        <div class="${d.winnerId===fa.id?"winner":"loser"}"><b>${esc(fa.name)}</b><br><small>${esc(fa.style)} · ${Math.round(d.sa)}</small></div>
-        <div class="vs">VS<br>#${d.pos}</div>
-        <div class="${d.winnerId===fb.id?"winner":"loser"}" style="text-align:right"><b>${esc(fb.name)}</b><br><small>${esc(fb.style)} · ${Math.round(d.sb)}</small></div>
+        <div class="${d.winnerId===fa.id?"winner":"loser"}"><b>${esc(fa.name)}</b><br><small>Media ${overall(fa)} · ${d.hitsA} golpes</small></div>
+        <div class="vs">VS<br>#${d.pos}<br>🎲</div>
+        <div class="${d.winnerId===fb.id?"winner":"loser"}" style="text-align:right"><b>${esc(fb.name)}</b><br><small>Media ${overall(fb)} · ${d.hitsB} golpes</small></div>
       </div>`;
     }).join("")}
   </div>`;
@@ -476,6 +788,10 @@ function resumeGame(){
     case "qualifiers":renderQualifiers();break;
     case "lineupCover":renderLineupCover();break;
     case "lineup":renderLineup();break;
+    case "tournament":
+      if(game.tournament?.reveal)renderTournament();
+      else startTournament();
+      break;
     case "results":renderResults();break;
     default:showOnly("setupScreen");
   }
