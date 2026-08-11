@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111318" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Pueblo Fight — Draft & Torneo</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg:#0d0f14;--panel:#151922;--panel2:#1d2330;--text:#f7f8fb;--muted:#9ba5b7;
+      --accent:#ffcc4d;--accent2:#ff6b57;--ok:#55d98d;--bad:#ff657a;--line:#293142;
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:radial-gradient(circle at top,#1a2030 0,#0d0f14 42%);
+      color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      min-height:100vh;
+    }
+    button,input,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:760px;margin:auto;padding:18px 14px 100px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .brand{font-weight:950;letter-spacing:-.04em;font-size:25px}
+    .brand span{color:var(--accent)}
+    .pill{padding:7px 11px;border:1px solid var(--line);background:#111722;border-radius:999px;color:var(--muted);font-size:12px}
+    .panel{background:linear-gradient(180deg,rgba(29,35,48,.96),rgba(20,24,33,.96));border:1px solid var(--line);border-radius:var(--radius);padding:17px;box-shadow:0 18px 45px rgba(0,0,0,.22);margin-bottom:14px}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:29px;line-height:1.02;letter-spacing:-.04em;margin-bottom:10px}
+    h2{font-size:19px;letter-spacing:-.02em}
+    h3{font-size:15px}
+    p{color:var(--muted);line-height:1.5}
+    .hero{padding:22px 18px}
+    .hero strong{color:#fff}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    @media(max-width:560px){.grid4{grid-template-columns:repeat(2,1fr)}}
+    .mini{background:#111620;border:1px solid var(--line);border-radius:16px;padding:12px}
+    .mini .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .mini .v{font-size:20px;font-weight:900;margin-top:3px}
+    label{display:block;color:#dfe4ec;font-size:13px;font-weight:750;margin-bottom:6px}
+    input,textarea{width:100%;border:1px solid #313a4d;background:#0f131b;color:white;border-radius:14px;padding:13px 14px;outline:none}
+    textarea{min-height:160px;resize:vertical;line-height:1.4}
+    input:focus,textarea:focus{border-color:var(--accent)}
+    .field{margin-bottom:14px}
+    .btn{border:0;border-radius:15px;padding:13px 15px;font-weight:900;background:var(--accent);color:#17130a;min-height:48px}
+    .btn.secondary{background:#252d3d;color:#fff;border:1px solid #354056}
+    .btn.danger{background:#3a2027;color:#ffd8de;border:1px solid #6d2f3c}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .actions{display:flex;gap:9px;flex-wrap:wrap}
+    .actions .btn{flex:1}
+    .fighter{
+      position:relative;overflow:hidden;background:
+      radial-gradient(circle at 88% 12%,rgba(255,204,77,.18),transparent 30%),
+      linear-gradient(155deg,#242b3b,#151a24);
+      border:1px solid #3a4357;border-radius:24px;padding:18px;
+    }
+    .fighter .name{font-size:27px;font-weight:950;letter-spacing:-.045em;margin-bottom:2px}
+    .fighter .nick{font-weight:800;color:var(--accent);font-size:14px}
+    .style{display:inline-flex;margin-top:10px;padding:6px 10px;border-radius:999px;background:#10151e;border:1px solid #394154;font-size:12px;font-weight:800}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:16px}
+    .stat{background:#111620;border:1px solid #30384a;border-radius:12px;padding:9px 6px;text-align:center}
+    .stat b{display:block;font-size:17px}
+    .stat span{font-size:9px;color:var(--muted);text-transform:uppercase}
+    .auction{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+    @media(max-width:650px){.auction{grid-template-columns:1fr}}
+    .bidbox{text-align:center;background:#10151e;border:1px solid var(--line);border-radius:20px;padding:16px}
+    .price{font-size:46px;font-weight:1000;letter-spacing:-.06em;color:var(--accent)}
+    .leader{font-size:13px;color:var(--muted);min-height:20px}
+    .log{max-height:170px;overflow:auto;background:#0e1219;border-radius:14px;padding:10px;border:1px solid var(--line);font-size:12px;color:#bcc5d5}
+    .log div+div{margin-top:6px}
+    .roster{display:flex;flex-direction:column;gap:8px}
+    .rosterItem{display:flex;align-items:center;gap:10px;padding:10px;background:#111620;border:1px solid var(--line);border-radius:14px}
+    .avatar{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#252d3c;font-weight:950}
+    .rosterItem .meta{flex:1;min-width:0}
+    .rosterItem .meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rosterItem small{color:var(--muted)}
+    .money{font-weight:900;color:var(--accent)}
+    .slot{padding:12px;background:#111620;border:1px solid var(--line);border-radius:15px;margin-bottom:9px}
+    .slotHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+    .slotHead b{font-size:13px}
+    .slotHead span{font-size:11px;color:var(--muted)}
+    .reorder{display:flex;gap:5px}
+    .iconbtn{width:38px;height:38px;border-radius:11px;background:#252d3d;border:1px solid #364158;color:#fff}
+    .match{background:#10151e;border:1px solid var(--line);border-radius:18px;padding:13px;margin-top:10px}
+    .matchTitle{display:flex;justify-content:space-between;gap:10px;font-weight:900}
+    .duel{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #252d3d;margin-top:9px}
+    .duel .vs{font-size:10px;color:var(--muted)}
+    .winner{color:var(--ok);font-weight:900}
+    .loser{color:#aeb7c8}
+    .banner{padding:16px;border-radius:18px;background:linear-gradient(110deg,#322b14,#1b1e24);border:1px solid #5a4a16;margin-bottom:14px}
+    .champ{font-size:32px;font-weight:1000;letter-spacing:-.05em;color:var(--accent)}
+    .hidden{display:none!important}
+    .note{font-size:12px;color:var(--muted)}
+    .progress{height:9px;background:#0d1118;border-radius:999px;overflow:hidden;border:1px solid #293142}
+    .progress > div{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0%}
+    .tagline{font-size:13px;color:#c7cfdd}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .rules{font-size:13px;color:#bbc3d2;padding-left:18px}
+    .rules li+li{margin-top:7px}
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:90%;padding:11px 15px;background:#f5f6f8;color:#111;border-radius:999px;font-weight:800;font-size:12px;box-shadow:0 10px 35px rgba(0,0,0,.4);z-index:50}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">Pueblo <span>Fight</span></div>
+    <div class="pill" id="phasePill">Preparación</div>
+  </div>
+
+  <section id="setup">
+    <div class="panel hero">
+      <h1>Subasta a los luchadores.<br>Ordena el equipo. Gana el pueblo.</h1>
+      <p>Prototipo local para 1 jugador contra 3 rivales controlados por la máquina. Está pensado para probar si el bucle del juego engancha antes de añadir multijugador real.</p>
+      <div class="grid4">
+        <div class="mini"><div class="k">Equipos</div><div class="v">4</div></div>
+        <div class="mini"><div class="k">Plantilla</div><div class="v">3</div></div>
+        <div class="mini"><div class="k">Presupuesto</div><div class="v">100</div></div>
+        <div class="mini"><div class="k">Formato</div><div class="v">BO3</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Nueva partida</h2>
+      <div class="field">
+        <label for="playerName">Tu nombre / nombre del equipo</label>
+        <input id="playerName" value="Los del Barrio" maxlength="24">
+      </div>
+      <div class="field">
+        <label for="fighterNames">Gente del pueblo — un nombre por línea</label>
+        <textarea id="fighterNames">El Pana
+La Chispa
+Toni Martillo
+María la Fiera
+El Zurdo
+Paco Turbo
+La Nati
+Juanito Hierro
+Marta Flash
+El Chato
+Rosi Técnica
+Sergio Muro
+Lola Rayo
+El Nano
+Carmen KO
+Dani Trueno</textarea>
+        <div class="note">Necesitamos al menos 12. Si pones menos, completaré la lista automáticamente.</div>
+      </div>
+      <button class="btn" id="startBtn">Empezar la subasta</button>
+    </div>
+
+    <div class="panel">
+      <h2>Por qué esta versión puede funcionar</h2>
+      <ul class="rules">
+        <li><b>La subasta crea pique:</b> no basta con tener al mejor luchador; hay que pagar lo justo y conservar monedas.</li>
+        <li><b>La alineación crea táctica:</b> cada posición favorece atributos distintos.</li>
+        <li><b>Estilos con counter:</b> Técnico vence a Bruto, Bruto vence a Ágil y Ágil vence a Técnico.</li>
+        <li><b>Un poco de azar:</b> el favorito suele ganar, pero nunca está totalmente decidido.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="draft" class="hidden">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px">
+        <div><h2 style="margin-bottom:3px">Subasta</h2><div class="tagline" id="draftCounter"></div></div>
+        <div class="money" id="myMoney"></div>
+      </div>
+      <div class="progress"><div id="draftProgress"></div></div>
+    </div>
+
+    <div class="auction">
+      <div id="fighterCard" class="fighter"></div>
+      <div>
+        <div class="bidbox">
+          <div class="note">PUJA ACTUAL</div>
+          <div class="price" id="currentBid">0</div>
+          <div class="leader" id="bidLeader">Sin pujas</div>
+          <div class="actions" style="margin-top:14px">
+            <button class="btn" id="bid1">+1</button>
+            <button class="btn" id="bid5">+5</button>
+          </div>
+          <button class="btn danger" id="passBtn" style="width:100%;margin-top:9px">Pasar por este luchador</button>
+        </div>
+        <div class="panel" style="margin-top:12px;padding:12px">
+          <h3>Últimas pujas</h3>
+          <div class="log" id="auctionLog"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Equipos</h2>
+      <div class="grid" id="teamsGrid"></div>
+    </div>
+  </section>
+
+  <section id="lineup" class="hidden">
+    <div class="panel">
+      <h2>Tu alineación</h2>
+      <p>El orden importa. El rival también tendrá 3 posiciones, y se enfrentarán 1 contra 1.</p>
+      <div id="lineupList"></div>
+      <button class="btn" id="simulateBtn" style="width:100%;margin-top:8px">Jugar el torneo</button>
+    </div>
+    <div class="panel">
+      <h2>Bonos de posición</h2>
+      <div class="grid">
+        <div class="mini"><div class="k">1 · Apertura</div><div class="v" style="font-size:15px">Velocidad + Técnica</div></div>
+        <div class="mini"><div class="k">2 · Choque</div><div class="v" style="font-size:15px">Fuerza + Aguante</div></div>
+        <div class="mini"><div class="k">3 · Cierre</div><div class="v" style="font-size:15px">Coraje + Fuerza</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Plantillas rivales</h2>
+      <div class="grid" id="rivalsGrid"></div>
+    </div>
+  </section>
+
+  <section id="results" class="hidden">
+    <div id="championBanner" class="banner"></div>
+    <div class="panel">
+      <h2>Cuadro del torneo</h2>
+      <div id="tournamentResults"></div>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" id="samePlayersBtn">Revancha</button>
+      <button class="btn" id="newGameBtn">Nueva partida</button>
+    </div>
+  </section>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const TEAM_SIZE = 3;
+const START_MONEY = 100;
+const styles = ["Bruto","Técnico","Ágil"];
+const nicknames = ["El Martillo","La Sombra","Turbo","Puño Fino","La Bestia","Centella","El Muro","La Avispa","Vendaval","La Máquina","El Lince","La Roca"];
+const defaults = ["El Pana","La Chispa","Toni Martillo","María la Fiera","El Zurdo","Paco Turbo","La Nati","Juanito Hierro","Marta Flash","El Chato","Rosi Técnica","Sergio Muro","Lola Rayo","El Nano","Carmen KO","Dani Trueno"];
+
+let state = {};
+
+const $ = id => document.getElementById(id);
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const esc = s => String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+
+function toast(msg){
+  $("toast").textContent = msg;
+  $("toast").classList.remove("hidden");
+  setTimeout(()=>$("toast").classList.add("hidden"),1800);
+}
+function setPhase(text){ $("phasePill").textContent = text; }
+function showOnly(id){
+  ["setup","draft","lineup","results"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function makeFighter(name,i){
+  const power=rnd(48,95), technique=rnd(48,95), speed=rnd(48,95), stamina=rnd(48,95), grit=rnd(48,95);
+  const style=styles[i%styles.length];
+  const overall=Math.round((power+technique+speed+stamina+grit)/5);
+  return {
+    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${i}-${Math.random()}`,
+    name, nickname:nicknames[rnd(0,nicknames.length-1)], style,
+    power, technique, speed, stamina, grit, overall,
+    base: clamp(Math.round((overall-45)/4),5,15)
+  };
+}
+function team(name,isHuman=false){
+  return {name,money:START_MONEY,roster:[],isHuman,lineup:[]};
+}
+
+function startGame(){
+  let names=$("fighterNames").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  const used=new Set(names.map(x=>x.toLowerCase()));
+  for(const d of defaults){
+    if(names.length>=16) break;
+    if(!used.has(d.toLowerCase())){names.push(d);used.add(d.toLowerCase())}
+  }
+  while(names.length<12) names.push(`Luchador ${names.length+1}`);
+  names=names.slice(0,24);
+
+  state={
+    names:[...names],
+    fighters:names.map(makeFighter).sort(()=>Math.random()-.5),
+    teams:[
+      team($("playerName").value.trim()||"Los del Barrio",true),
+      team("Peña del Bar"),
+      team("Los de Arriba"),
+      team("Cuadrilla 77")
+    ],
+    sold:0,current:null,bid:0,leader:null,passed:false,log:[],history:[]
+  };
+  setPhase("Subasta");
+  showOnly("draft");
+  nextAuction();
+}
+
+function eligible(t,price){
+  const remaining=TEAM_SIZE-t.roster.length;
+  if(remaining<=0) return false;
+  const reserveForRest=Math.max(0,remaining-1);
+  return t.money-price>=reserveForRest;
+}
+function cpuValue(t,f){
+  const need=TEAM_SIZE-t.roster.length;
+  let value=f.base + Math.round((f.overall-60)*0.65) + rnd(-4,5);
+  if(need>=2 && t.money>55) value+=3;
+  if(f.overall>=82) value+=5;
+  return clamp(value,f.base,Math.max(f.base,t.money-(need-1)));
+}
+function maxUserBid(){
+  const t=state.teams[0];
+  return t.money-Math.max(0,TEAM_SIZE-t.roster.length-1);
+}
+function addLog(txt){
+  state.log.unshift(txt);
+  state.log=state.log.slice(0,12);
+  renderAuction();
+}
+function initialCpuBids(){
+  const f=state.current;
+  const cpus=state.teams.slice(1).filter(t=>eligible(t,f.base));
+  if(!cpus.length) return;
+  const willing=cpus.filter(t=>cpuValue(t,f)>=f.base);
+  if(willing.length){
+    const t=willing[rnd(0,willing.length-1)];
+    state.bid=f.base; state.leader=t;
+    state.log.unshift(`${t.name} abre con ${state.bid} monedas.`);
+  }
+}
+function nextAuction(){
+  if(state.teams.every(t=>t.roster.length>=TEAM_SIZE)){ endDraft(); return; }
+  const available=state.fighters.filter(f=>!state.history.some(h=>h.fighter.id===f.id));
+  if(!available.length){ fillMissing(); endDraft(); return; }
+
+  state.current=available[0];
+  state.bid=0; state.leader=null; state.passed=false; state.log=[];
+  initialCpuBids();
+  renderAuction();
+}
+function userBid(delta){
+  const me=state.teams[0];
+  if(me.roster.length>=TEAM_SIZE){toast("Tu plantilla ya está completa.");return}
+  const target=Math.max(state.current.base,state.bid+delta);
+  if(target>maxUserBid()){toast("Necesitas reservar monedas para completar tu equipo.");return}
+  state.bid=target; state.leader=me; state.passed=false;
+  addLog(`${me.name} puja ${target}.`);
+  cpuReact();
+}
+function cpuReact(){
+  let contenders=state.teams.slice(1).filter(t=>eligible(t,state.bid+1) && cpuValue(t,state.current)>state.bid);
+
+  // Si nadie de la CPU quiere superar la puja del jugador, se adjudica automáticamente.
+  if(state.leader?.isHuman && contenders.length===0){
+    renderAuction();
+    setTimeout(()=>sell(state.current,state.leader,state.bid),350);
+    return;
+  }
+
+  if(contenders.length && state.leader?.isHuman){
+    const t=contenders.sort((a,b)=>cpuValue(b,state.current)-cpuValue(a,state.current))[0];
+    const step=(cpuValue(t,state.current)-state.bid>6 && Math.random()>.55)?5:1;
+    const next=Math.min(state.bid+step,cpuValue(t,state.current));
+    if(eligible(t,next)){
+      state.bid=next; state.leader=t;
+      addLog(`${t.name} sube a ${next}.`);
+    }
+  }
+  renderAuction();
+}
+function userPass(){
+  state.passed=true;
+  resolveCpuAuction();
+}
+function resolveCpuAuction(){
+  const f=state.current;
+  let bidders=state.teams.slice(1).filter(t=>t.roster.length<TEAM_SIZE && eligible(t,f.base))
+    .map(t=>({t,max:cpuValue(t,f)})).filter(x=>x.max>=f.base)
+    .sort((a,b)=>b.max-a.max);
+
+  if(state.leader && !state.leader.isHuman){
+    const existing=bidders.find(x=>x.t===state.leader);
+    if(existing) existing.max=Math.max(existing.max,state.bid);
+  }
+  if(!bidders.length){
+    state.history.push({fighter:f,winner:null,price:0});
+    addLog(`${f.name} queda sin vender.`);
+    setTimeout(nextAuction,450);
+    return;
+  }
+  const top=bidders[0], second=bidders[1];
+  let price=Math.max(f.base,state.bid);
+  if(second) price=Math.min(top.max,Math.max(price,second.max+1));
+  price=Math.min(price,top.max);
+  sell(f,top.t,price);
+}
+function sell(f,t,price){
+  if(!eligible(t,price) && t.money<price){ return; }
+  t.money-=price; t.roster.push(f); t.lineup=[...t.roster];
+  state.history.push({fighter:f,winner:t,price});
+  state.sold++;
+  addLog(`🔨 ${t.name} ficha a ${f.name} por ${price}.`);
+  setTimeout(nextAuction,550);
+}
+function claimIfLeader(){
+  if(!state.leader){ resolveCpuAuction(); return; }
+  if(state.leader.isHuman){
+    // CPUs get one last chance.
+    const challengers=state.teams.slice(1).filter(t=>eligible(t,state.bid+1) && cpuValue(t,state.current)>state.bid);
+    if(challengers.length){ cpuReact(); return; }
+    sell(state.current,state.leader,state.bid);
+  } else {
+    resolveCpuAuction();
+  }
+}
+function fillMissing(){
+  for(const t of state.teams){
+    while(t.roster.length<TEAM_SIZE){
+      const candidates=state.fighters.filter(f=>!state.history.some(h=>h.fighter.id===f.id));
+      if(!candidates.length) break;
+      const f=candidates[0]; const price=Math.min(f.base,t.money);
+      t.money-=price;t.roster.push(f);t.lineup=[...t.roster];
+      state.history.push({fighter:f,winner:t,price});state.sold++;
+    }
+  }
+}
+function endDraft(){
+  fillMissing();
+  state.teams.forEach(t=>t.lineup=[...t.roster]);
+  autoLineups();
+  setPhase("Alineación");
+  renderLineup();
+  showOnly("lineup");
+}
+function renderAuction(){
+  const f=state.current;if(!f)return;
+  $("fighterCard").innerHTML=`
+    <div class="name">${esc(f.name)}</div>
+    <div class="nick">${esc(f.nickname)}</div>
+    <span class="style">${f.style}</span>
+    <div class="stats">
+      ${stat("FUE",f.power)}${stat("TEC",f.technique)}${stat("VEL",f.speed)}${stat("AGU",f.stamina)}${stat("COR",f.grit)}
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span class="note">Media ${f.overall}</span><span class="note">Salida ${f.base} 🪙</span></div>`;
+  $("currentBid").textContent=state.bid||f.base;
+  $("bidLeader").textContent=state.leader?`Va ganando ${state.leader.name}`:"Todavía no hay comprador";
+  $("auctionLog").innerHTML=state.log.length?state.log.map(x=>`<div>${esc(x)}</div>`).join(""):"<div>La sala está en silencio…</div>";
+  $("myMoney").textContent=`${state.teams[0].money} 🪙`;
+  const filled=state.teams.reduce((a,t)=>a+t.roster.length,0);
+  $("draftCounter").textContent=`${filled}/${state.teams.length*TEAM_SIZE} plazas cubiertas`;
+  $("draftProgress").style.width=`${filled/(state.teams.length*TEAM_SIZE)*100}%`;
+  $("teamsGrid").innerHTML=state.teams.map(teamCard).join("");
+  const meFull=state.teams[0].roster.length>=TEAM_SIZE;
+  $("bid1").disabled=meFull || state.passed;
+  $("bid5").disabled=meFull || state.passed;
+  $("passBtn").disabled=meFull || state.passed;
+  $("passBtn").textContent=state.passed?"Has pasado":"Pasar por este luchador";
+}
+function stat(label,v){return `<div class="stat"><b>${v}</b><span>${label}</span></div>`}
+function initials(n){return n.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()}
+function teamCard(t){
+  return `<div class="mini">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px">
+      <b>${esc(t.name)}</b><span class="money">${t.money} 🪙</span>
+    </div>
+    <div class="roster">${t.roster.length?t.roster.map(f=>rosterItem(f)).join(""):`<div class="note">Sin fichajes todavía.</div>`}</div>
+  </div>`;
+}
+function rosterItem(f){
+  return `<div class="rosterItem"><div class="avatar">${initials(f.name)}</div><div class="meta"><b>${esc(f.name)}</b><small>${f.style} · media ${f.overall}</small></div></div>`;
+}
+
+function slotAffinity(f,pos){
+  if(pos===0) return f.speed*.50+f.technique*.50;
+  if(pos===1) return f.power*.50+f.stamina*.50;
+  return f.grit*.50+f.power*.50;
+}
+function autoLineups(){
+  state.teams.slice(1).forEach(t=>{
+    const left=[...t.roster], lineup=[];
+    for(let p=0;p<TEAM_SIZE;p++){
+      left.sort((a,b)=>slotAffinity(b,p)-slotAffinity(a,p));
+      lineup.push(left.shift());
+    }
+    t.lineup=lineup;
+  });
+}
+function moveLineup(i,dir){
+  const arr=state.teams[0].lineup;
+  const j=i+dir;if(j<0||j>=arr.length)return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  renderLineup();
+}
+function renderLineup(){
+  const me=state.teams[0];
+  const labels=[
+    ["1 · Apertura","Favorece Velocidad + Técnica"],
+    ["2 · Choque","Favorece Fuerza + Aguante"],
+    ["3 · Cierre","Favorece Coraje + Fuerza"]
+  ];
+  $("lineupList").innerHTML=me.lineup.map((f,i)=>`
+    <div class="slot">
+      <div class="slotHead"><div><b>${labels[i][0]}</b><br><span>${labels[i][1]}</span></div>
+      <div class="reorder"><button class="iconbtn" onclick="moveLineup(${i},-1)">↑</button><button class="iconbtn" onclick="moveLineup(${i},1)">↓</button></div></div>
+      ${rosterItem(f)}
+    </div>`).join("");
+  $("rivalsGrid").innerHTML=state.teams.slice(1).map(t=>`
+    <div class="mini"><b>${esc(t.name)}</b><div class="roster" style="margin-top:8px">${t.roster.map(rosterItem).join("")}</div></div>`).join("");
+}
+function styleBonus(a,b){
+  const win={ "Técnico":"Bruto", "Bruto":"Ágil", "Ágil":"Técnico" };
+  if(win[a]===b) return 6;
+  if(win[b]===a) return -6;
+  return 0;
+}
+function fighterScore(f,pos,enemy){
+  const base=f.power*.25+f.technique*.22+f.speed*.19+f.stamina*.18+f.grit*.16;
+  const role=(slotAffinity(f,pos)-50)*.13;
+  const matchup=styleBonus(f.style,enemy.style);
+  const luck=rnd(-8,8);
+  return base+role+matchup+luck;
+}
+function playMatch(a,b,label){
+  let aw=0,bw=0,duels=[];
+  for(let i=0;i<TEAM_SIZE;i++){
+    const fa=a.lineup[i], fb=b.lineup[i];
+    let sa=fighterScore(fa,i,fb), sb=fighterScore(fb,i,fa);
+    if(Math.abs(sa-sb)<.01) sa+=Math.random();
+    const winner=sa>sb?fa:fb;
+    if(winner===fa) aw++; else bw++;
+    duels.push({pos:i+1,fa,fb,sa,sb,winner});
+  }
+  return {label,a,b,aw,bw,winner:aw>bw?a:b,duels};
+}
+function simulateTournament(){
+  const [me,a,b,c]=state.teams;
+  const semi1=playMatch(me,a,"Semifinal 1");
+  const semi2=playMatch(b,c,"Semifinal 2");
+  const final=playMatch(semi1.winner,semi2.winner,"FINAL");
+  state.tournament={semi1,semi2,final,champion:final.winner};
+  renderResults();
+  setPhase("Campeón");
+  showOnly("results");
+}
+function matchHtml(m){
+  return `<div class="match">
+    <div class="matchTitle"><span>${m.label}</span><span>${esc(m.a.name)} ${m.aw}–${m.bw} ${esc(m.b.name)}</span></div>
+    ${m.duels.map(d=>{
+      const left=d.winner===d.fa?"winner":"loser", right=d.winner===d.fb?"winner":"loser";
+      return `<div class="duel">
+        <div class="${left}"><b>${esc(d.fa.name)}</b><br><span class="note">${d.fa.style} · ${Math.round(d.sa)}</span></div>
+        <div class="vs">VS<br>#${d.pos}</div>
+        <div class="${right}" style="text-align:right"><b>${esc(d.fb.name)}</b><br><span class="note">${d.fb.style} · ${Math.round(d.sb)}</span></div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+function renderResults(){
+  const t=state.tournament, champ=t.champion;
+  const humanWon=champ.isHuman;
+  $("championBanner").innerHTML=`
+    <div class="note">${humanWon?"🏆 HAS GANADO":"🏆 CAMPEÓN DEL TORNEO"}</div>
+    <div class="champ">${esc(champ.name)}</div>
+    <div class="tagline">${humanWon?"El presupuesto, la subasta y la alineación han salido redondos.":"Toca estudiar el mercado y pedir la revancha."}</div>`;
+  $("tournamentResults").innerHTML=matchHtml(t.semi1)+matchHtml(t.semi2)+matchHtml(t.final);
+}
+function resetToSetup(keepNames){
+  if(keepNames && state.names) $("fighterNames").value=state.names.join("\n");
+  setPhase("Preparación");showOnly("setup");
+}
+
+$("startBtn").addEventListener("click",startGame);
+$("bid1").addEventListener("click",()=>userBid(1));
+$("bid5").addEventListener("click",()=>userBid(5));
+$("passBtn").addEventListener("click",userPass);
+$("simulateBtn").addEventListener("click",simulateTournament);
+$("newGameBtn").addEventListener("click",()=>resetToSetup(false));
+$("samePlayersBtn").addEventListener("click",()=>resetToSetup(true));
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
