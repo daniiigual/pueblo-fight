@@ -1,11 +1,12 @@
 {
-  "name": "Pueblo Fight — Draft & Torneo",
+  "name": "Pueblo Fight",
   "short_name": "Pueblo Fight",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0d0f14",
-  "theme_color": "#111318",
-  "description": "Juego social de subasta de luchadores, alineación y torneo.",
+  "background_color": "#0b0e13",
+  "theme_color": "#0d1016",
+  "description": "Juego social de subasta circular, equipos y torneo.",
   "icons": [
     {
       "src": "icon-192.png",
