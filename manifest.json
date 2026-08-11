@@ -4,9 +4,9 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b0e13",
-  "theme_color": "#0d1016",
-  "description": "Juego social de subasta circular, equipos y torneo.",
+  "background_color": "#0b0b0a",
+  "theme_color": "#15140f",
+  "description": "Pueblo Fight: subasta, dados y torneo de la peña.",
   "icons": [
     {
       "src": "icon-192.png",

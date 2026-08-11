@@ -3,7 +3,7 @@ const TEAM_SIZE = 3;
 const START_MONEY = 30;
 const QUALIFIERS = 4;
 const CONFIG_KEY = "puebloFightV2Config";
-const GAME_KEY = "puebloFightV5Game";
+const GAME_KEY = "puebloFightV6Game";
 
 const $ = id => document.getElementById(id);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -347,21 +347,34 @@ function renderQualifiers(){
   }).join("");
 }
 function prepareLineups(){
+  game.lineupPurpose="semis";
   game.lineupQueue=game.ranking.slice(0,QUALIFIERS);
   game.lineupIndex=0;game.phase="lineupCover";saveGame();renderLineupCover();
 }
 function renderLineupCover(){
-  setPhase("Alineaciones");showOnly("lineupCoverScreen");
+  const isFinal=game.lineupPurpose==="final";
+  setPhase(isFinal?"Final · estrategia":"Alineaciones");
+  showOnly("lineupCoverScreen");
   const p=playerById(game.lineupQueue[game.lineupIndex]);
   $("lineupCoverName").textContent=p.name;
+  $("lineupCoverEyebrow").textContent=isFinal?"🔥 ALINEACIÓN SECRETA DE LA FINAL":"🔒 ALINEACIÓN PRIVADA";
+  $("lineupCoverTitle").textContent=isFinal?"La final permite cambiar el orden. Pásale el móvil a":"Pásale el móvil a";
+  $("openLineupBtn").textContent=isFinal?"Preparar mi final":"Abrir mi equipo";
 }
 function openLineup(){
   game.phase="lineup";saveGame();renderLineup();
 }
 function renderLineup(){
-  setPhase("Alineación privada");showOnly("lineupScreen");
+  const isFinal=game.lineupPurpose==="final";
+  setPhase(isFinal?"Alineación de la final":"Alineación privada");
+  showOnly("lineupScreen");
   const p=playerById(game.lineupQueue[game.lineupIndex]);
   $("lineupTeamName").textContent=p.name;
+  $("lineupEyebrow").textContent=isFinal?"🔥 TU ORDEN PARA LA FINAL":"TU ALINEACIÓN";
+  $("lineupSubtitle").textContent=isFinal
+    ?"Puedes cambiar completamente el orden respecto a la semifinal. El rival hará lo mismo en secreto."
+    :"Ordena tus 3 luchadores. Cada posición decide contra quién se cruzarán.";
+  $("saveLineupBtn").textContent=isFinal?"Cerrar mi alineación de la final":"Guardar y pasar el móvil";
   const labels=[
     ["1 · Primer enfrentamiento","Tu luchador 1 contra el luchador 1 rival"],
     ["2 · Segundo enfrentamiento","Tu luchador 2 contra el luchador 2 rival"],
@@ -392,6 +405,11 @@ function saveCurrentLineup(){
   game.lineupIndex++;
   if(game.lineupIndex<game.lineupQueue.length){
     game.phase="lineupCover";saveGame();renderLineupCover();
+    return;
+  }
+
+  if(game.lineupPurpose==="final"){
+    createFinalAfterLineups();
   }else{
     startTournament();
   }
@@ -479,15 +497,39 @@ function playMatch(a,b,label){
   return {label,aId:a.id,bId:b.id,aw,bw,winnerId:aw>bw?a.id:b.id,duels};
 }
 function startTournament(){
-  // El resultado se calcula una vez y se guarda; después solo lo vamos revelando.
-  // Así recargar Safari nunca cambia el ganador.
+  // Las semifinales se calculan una sola vez.
+  // La final NO se calcula todavía: los dos finalistas podrán cambiar su orden.
   const q=game.ranking.slice(0,QUALIFIERS).map(playerById);
   const semi1=playMatch(q[0],q[3],"Semifinal 1");
   const semi2=playMatch(q[1],q[2],"Semifinal 2");
-  const final=playMatch(playerById(semi1.winnerId),playerById(semi2.winnerId),"FINAL");
   game.tournament={
-    semi1,semi2,final,championId:final.winnerId,
+    semi1,semi2,final:null,championId:null,
     reveal:{matchKey:"semi1",stage:"intro",duelIndex:0,exchangeIndex:0,resolved:false}
+  };
+  game.phase="tournament";
+  saveGame();
+  renderTournament();
+}
+
+function prepareFinalLineups(){
+  const finalistA=game.tournament.semi1.winnerId;
+  const finalistB=game.tournament.semi2.winnerId;
+  game.lineupPurpose="final";
+  game.lineupQueue=[finalistA,finalistB];
+  game.lineupIndex=0;
+  game.phase="lineupCover";
+  saveGame();
+  renderLineupCover();
+}
+
+function createFinalAfterLineups(){
+  const finalistA=playerById(game.tournament.semi1.winnerId);
+  const finalistB=playerById(game.tournament.semi2.winnerId);
+  const final=playMatch(finalistA,finalistB,"FINAL");
+  game.tournament.final=final;
+  game.tournament.championId=final.winnerId;
+  game.tournament.reveal={
+    matchKey:"final",stage:"intro",duelIndex:0,exchangeIndex:0,resolved:false
   };
   game.phase="tournament";
   saveGame();
@@ -549,7 +591,7 @@ function renderMatchIntro(){
       </div>
       ${isFinal?`<div class="finalWarning">Aquí se decide el campeón. La media da ventaja, pero los dados pueden destrozar cualquier pronóstico.</div>`:
       `<div class="cinematicNote">Cada duelo es al mejor de 3 golpes. Un 6 natural puede cambiarlo todo.</div>`}
-      <button id="enterMatchBtn" class="btn giant">${isFinal?"Entrar en la final":"Entrar al combate"}</button>
+      <button id="enterMatchBtn" class="btn giant">${isFinal?"Que empiece la FINAL":"Abrir el corro"}</button>
     </div>`;
   $("enterMatchBtn").addEventListener("click",()=>{
     r.stage="duel";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;saveGame();renderTournament();
@@ -643,7 +685,7 @@ function renderDuelStage(){
                 ? (isLastDuel?"Ver ganador del combate":"Siguiente enfrentamiento")
                 : "Siguiente tirada"
             }</button>`
-          : `<button id="resolveDuelBtn" class="btn giant">🎲 Tirar los dados</button>`
+          : `<button id="resolveDuelBtn" class="btn giant">🎲 Que rueden los dados</button>`
         }
       </div>
     </div>`;
@@ -735,9 +777,9 @@ function renderMatchWinner(){
 }
 function nextTournamentButtonLabel(){
   const key=game.tournament.reveal.matchKey;
-  if(key==="semi1")return "Ver segunda semifinal";
-  if(key==="semi2")return "Ir a la GRAN FINAL";
-  return "Coronar campeón";
+  if(key==="semi1")return "Que pase la siguiente semifinal";
+  if(key==="semi2")return "Preparar alineaciones de la FINAL";
+  return "Levantar el trofeo";
 }
 function advanceTournament(){
   const r=game.tournament.reveal;
@@ -745,8 +787,7 @@ function advanceTournament(){
     r.matchKey="semi2";r.stage="intro";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;
     saveGame();renderTournament();
   }else if(r.matchKey==="semi2"){
-    r.matchKey="final";r.stage="intro";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;
-    saveGame();renderTournament();
+    prepareFinalLineups();
   }else{
     game.phase="results";saveGame();renderResults();
   }
@@ -760,7 +801,7 @@ function renderResults(){
     <div class="championSubtitle">Sobrevivió al draft, a la semifinal y a la final.</div>
     <p>Media de equipo ${playerAverage(champ)} · ${champ.money} monedas sin gastar.</p>`;
   $("tournamentResults").innerHTML=
-    matchHtml(game.tournament.semi1)+matchHtml(game.tournament.semi2)+matchHtml(game.tournament.final);
+    matchHtml(game.tournament.semi1)+matchHtml(game.tournament.semi2)+(game.tournament.final?matchHtml(game.tournament.final):"");
 }
 function matchHtml(m){
   const a=playerById(m.aId),b=playerById(m.bId);

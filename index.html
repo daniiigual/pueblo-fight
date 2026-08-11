@@ -13,19 +13,23 @@
 </head>
 <body>
   <div id="app" class="app">
-    <header class="topbar">
-      <div>
-        <div class="brand">Pueblo <span>Fight</span></div>
-        <div class="version">Draft social · v2</div>
+    <header class="topbar premiumTopbar">
+      <div class="brandLockup">
+        <div class="villageSeal">PF</div>
+        <div>
+          <div class="brand">Pueblo <span>Fight</span></div>
+          <div class="version">La plaza decide · edición de la peña</div>
+        </div>
       </div>
       <div id="phasePill" class="pill">Preparación</div>
     </header>
 
     <section id="setupScreen">
-      <div class="panel hero">
-        <div class="eyebrow">UNA SOLA MESA · CERO CPU</div>
-        <h1>Subasta circular.<br>Equipo propio.<br>Top 4 al torneo.</h1>
-        <p>Todos sois jugadores reales. El móvil va pasando de mano en mano durante el draft y las alineaciones.</p>
+      <div class="panel hero villageHero">
+        <div class="fiestaRibbon">TORNEO LOCAL · UNA NOCHE · UN CAMPEÓN</div>
+        <div class="eyebrow">HECHO PARA JUGAR CON LA PEÑA</div>
+        <h1>Fichad leyendas.<br>Montad el equipo.<br>Que hable el pueblo.</h1>
+        <p>Una subasta alrededor de la mesa, tres luchadores por equipo y dados capaces de hundir al favorito. El móvil va pasando de mano en mano.</p>
         <div class="rulesGrid">
           <div class="metric"><span>Presupuesto</span><b>30 🪙</b></div>
           <div class="metric"><span>Equipo</span><b>3 luchadores</b></div>
@@ -155,8 +159,8 @@
     <section id="lineupCoverScreen" class="hidden">
       <div class="panel privacyCard">
         <div class="lock">🔒</div>
-        <div class="eyebrow">ALINEACIÓN PRIVADA</div>
-        <h1>Pásale el móvil a</h1>
+        <div id="lineupCoverEyebrow" class="eyebrow">ALINEACIÓN PRIVADA</div>
+        <h1 id="lineupCoverTitle">Pásale el móvil a</h1>
         <div id="lineupCoverName" class="coverName">—</div>
         <p>Cuando tenga el móvil, que pulse el botón. Los demás no miréis la alineación.</p>
         <button id="openLineupBtn" class="btn giant">Abrir mi equipo</button>
@@ -165,9 +169,9 @@
 
     <section id="lineupScreen" class="hidden">
       <div class="panel">
-        <div class="eyebrow">TU ALINEACIÓN</div>
+        <div id="lineupEyebrow" class="eyebrow">TU ALINEACIÓN</div>
         <h1 id="lineupTeamName">—</h1>
-        <p>Ordena tus 3 luchadores. Cada posición favorece atributos diferentes.</p>
+        <p id="lineupSubtitle">Ordena tus 3 luchadores. Cada posición decide contra quién se cruzarán.</p>
         <div id="lineupSlots"></div>
         <button id="saveLineupBtn" class="btn giant">Guardar y pasar el móvil</button>
       </div>

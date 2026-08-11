@@ -346,3 +346,271 @@ input:focus,select:focus{border-color:var(--accent)}
   margin-top:12px;color:var(--muted);font-size:10px;line-height:1.45;text-align:center
 }
 .combatRuleHint b{color:#d9e0ea}
+
+
+/* =========================================================
+   PUEBLO FIGHT v6 — identidad premium de peña / torneo local
+   ========================================================= */
+:root{
+  --bg:#0b0b0a;
+  --panel:#171713;
+  --panel2:#201f19;
+  --line:#39372d;
+  --text:#f4eedf;
+  --muted:#a9a18f;
+  --accent:#e1b957;
+  --accent2:#a83d34;
+  --ok:#77b887;
+  --bad:#da6972;
+  --cream:#f0e5cd;
+  --wine:#8e312e;
+  --forest:#244d3c;
+  --shadow:0 24px 60px rgba(0,0,0,.38);
+}
+html{background:#090908}
+body{
+  color:var(--text);
+  background:
+    radial-gradient(circle at 12% 0%,rgba(168,61,52,.20),transparent 27%),
+    radial-gradient(circle at 88% 8%,rgba(225,185,87,.12),transparent 23%),
+    linear-gradient(180deg,#10100d 0%,#0a0a09 46%,#0c0c0a 100%);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;z-index:-1;
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.055) 0 1px,transparent 1.3px),
+    radial-gradient(circle at 70% 60%,rgba(255,255,255,.035) 0 1px,transparent 1.3px);
+  background-size:17px 17px,23px 23px;
+}
+.app{max-width:760px}
+.premiumTopbar{
+  padding:10px 2px 2px;
+  border-bottom:1px solid rgba(225,185,87,.16);
+  margin-bottom:18px
+}
+.brandLockup{display:flex;align-items:center;gap:11px;min-width:0}
+.villageSeal{
+  width:44px;height:44px;flex:0 0 44px;border-radius:50%;
+  display:grid;place-items:center;
+  color:#17140d;background:var(--accent);
+  border:3px double #6b5422;
+  box-shadow:0 6px 20px rgba(225,185,87,.17);
+  font-family:Georgia,"Times New Roman",serif;font-weight:900;font-size:16px
+}
+.brand{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:25px;letter-spacing:-.035em
+}
+.brand span{color:#f0c963}
+.version{color:#8f8878;letter-spacing:.11em;font-size:8px}
+.pill{
+  color:#dfd5c0;background:#15140f;
+  border:1px solid rgba(225,185,87,.24);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.015)
+}
+.panel{
+  position:relative;
+  background:
+    linear-gradient(180deg,rgba(31,30,25,.98),rgba(20,20,17,.98));
+  border:1px solid #343229;
+  box-shadow:var(--shadow);
+}
+.panel:after{
+  content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,.018);
+  border-radius:calc(var(--radius) - 5px);pointer-events:none
+}
+.villageHero{
+  overflow:hidden;
+  border-color:rgba(225,185,87,.34);
+  background:
+    radial-gradient(circle at 88% 8%,rgba(225,185,87,.18),transparent 27%),
+    radial-gradient(circle at 8% 100%,rgba(168,61,52,.16),transparent 36%),
+    linear-gradient(145deg,#29251b,#181713 60%,#161512)
+}
+.villageHero:before{
+  content:"PF";position:absolute;right:-10px;bottom:-45px;
+  font-family:Georgia,"Times New Roman",serif;font-weight:900;font-size:150px;
+  color:rgba(225,185,87,.045);transform:rotate(-8deg)
+}
+.fiestaRibbon{
+  display:inline-flex;margin-bottom:17px;padding:7px 10px;
+  background:var(--wine);border:1px solid #b1544a;border-radius:7px;
+  color:#f7e8d3;font-size:8px;font-weight:1000;letter-spacing:.15em;
+  box-shadow:0 6px 20px rgba(142,49,46,.20)
+}
+h1,.matchupTitle,.championName,.matchWinnerName{
+  font-family:Georgia,"Times New Roman",serif;
+  letter-spacing:-.035em
+}
+h1{font-size:32px;line-height:1.04}
+h2{color:#f0e9da}
+.eyebrow{color:#e6bf61;letter-spacing:.16em}
+.metric{
+  background:rgba(12,12,10,.55);
+  border-color:rgba(225,185,87,.17)
+}
+.metric b{color:#f3dfaa}
+.btn{
+  position:relative;
+  color:#211b0d;
+  background:linear-gradient(180deg,#edc968,#d7aa46);
+  border:1px solid #f5d984;
+  box-shadow:0 8px 0 #735b26,0 13px 25px rgba(0,0,0,.28);
+  transform:translateY(0);
+  transition:transform .08s ease,box-shadow .08s ease,filter .16s ease
+}
+.btn:active:not(:disabled){
+  transform:translateY(4px);
+  box-shadow:0 4px 0 #735b26,0 8px 18px rgba(0,0,0,.24)
+}
+.btn.secondary{
+  color:#ece4d4;background:linear-gradient(180deg,#2b2a23,#211f1a);
+  border-color:#494638;box-shadow:0 6px 0 #0d0d0b,0 10px 20px rgba(0,0,0,.22)
+}
+.btn.danger{
+  color:#ffe2dc;background:linear-gradient(180deg,#79332f,#592622);
+  border-color:#9e4a42;box-shadow:0 6px 0 #2f1210,0 10px 20px rgba(0,0,0,.2)
+}
+.smallBtn,.iconBtn{
+  background:#25231d;border-color:#494537;color:#eee5d4
+}
+input,select{
+  background:#11110e;border-color:#403d32;color:#f4eedf
+}
+input:focus,select:focus{
+  border-color:#d8b258;box-shadow:0 0 0 3px rgba(216,178,88,.08)
+}
+.playerRow,.fighterEditCard,.teamCard,.role,.slot,.rankRow,.orderItem,.rosterItem{
+  background:#12120f;border-color:#343228
+}
+.orderBadge{
+  color:#211b0d;background:linear-gradient(145deg,#f0ce72,#cf9f3e);
+  box-shadow:inset 0 0 0 1px #f7dd95,0 5px 16px rgba(225,185,87,.16)
+}
+.fighterCard{
+  border-color:rgba(225,185,87,.34);
+  background:
+    linear-gradient(90deg,rgba(142,49,46,.14),transparent 40%),
+    radial-gradient(circle at 88% 10%,rgba(225,185,87,.17),transparent 30%),
+    linear-gradient(155deg,#27251e,#161613)
+}
+.fighterName{
+  font-family:Georgia,"Times New Roman",serif;
+  color:#f3e8d3
+}
+.stat,.auctionPanel,.turnBox,.log,.scoreboard,.duelStage{
+  background-color:#11110e
+}
+.stat b,.price,.money,.teamMean,.scoreboardScore,.duelHits span b{
+  color:#e6bc58
+}
+.progress{background:#0d0d0b;border-color:#302e26}
+.progress>div{background:linear-gradient(90deg,#8f302c,#e0b656)}
+.leaderBox b{color:#f0dfb7}
+.turnBox{
+  border-color:#645a3c;
+  background:
+    linear-gradient(90deg,rgba(225,185,87,.07),transparent),
+    #11110e
+}
+.rankingList .rankRow:nth-child(-n+4){
+  border-color:rgba(225,185,87,.26)
+}
+.rankStatus.in{
+  background:rgba(36,77,60,.28);color:#9bd6ab;border:1px solid rgba(119,184,135,.22)
+}
+.rankStatus.out{
+  background:rgba(142,49,46,.20);color:#e69391;border:1px solid rgba(218,105,114,.18)
+}
+.privacyCard{
+  border-color:rgba(225,185,87,.34);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(225,185,87,.12),transparent 34%),
+    linear-gradient(180deg,#211f18,#151511)
+}
+.lock{filter:drop-shadow(0 6px 14px rgba(225,185,87,.18))}
+.coverName{
+  font-family:Georgia,"Times New Roman",serif;
+  color:#e8c462
+}
+.tournamentHero{
+  border-color:rgba(225,185,87,.36);
+  background:
+    radial-gradient(circle at 50% -12%,rgba(225,185,87,.20),transparent 37%),
+    linear-gradient(180deg,#26231a,#151510)
+}
+.roundTitle{color:#e5bb57}
+.teamIntro{
+  background:#11110e;border-color:#39362b
+}
+.bigVs,.matchupVs{color:#b34b40}
+.dieBox{
+  background:#efe5ce;color:#18150f;
+  border-color:#f6edda;
+  box-shadow:0 10px 28px rgba(0,0,0,.40)
+}
+.dieBox.rolling{
+  background:#1b1a16;color:#716b5e;border-color:#3d392e
+}
+.dieBox.naturalSpecial{
+  border-color:#e7bd5a;
+  box-shadow:0 0 0 3px rgba(231,189,90,.12),0 10px 34px rgba(225,185,87,.20)
+}
+.oddsLine,.diceResultText,.duelScore,.totalLine{
+  background:#181713
+}
+.diceResultText.specialEvent{
+  border-color:rgba(225,185,87,.28);
+  background:linear-gradient(90deg,rgba(142,49,46,.12),rgba(225,185,87,.08));
+  color:#f0dca6
+}
+.revealWinner{
+  background:rgba(36,77,60,.20);
+  border-color:rgba(119,184,135,.32)
+}
+.matchWinnerStage{
+  border-color:rgba(225,185,87,.32);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(225,185,87,.13),transparent 35%),
+    linear-gradient(180deg,#211f18,#151511)
+}
+.matchWinnerName{color:#9bcea8}
+.finalWarning{
+  color:#f1d994;border-color:#6d5825;
+  background:linear-gradient(90deg,#332b16,#201c12)
+}
+.championCard{
+  border-color:#7b642c;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(225,185,87,.30),transparent 42%),
+    linear-gradient(145deg,#3b3018,#181713 65%)
+}
+.championCard .championName{color:#f1cb68}
+.championSubtitle{color:#d4c5a6}
+.toast{
+  background:#efe5cf;color:#211d14;
+  border:1px solid #c9ad70
+}
+
+/* Alineación de final: sensación de "vestuario antes de salir". */
+#lineupScreen .panel:first-child{
+  border-color:rgba(225,185,87,.28);
+}
+#lineupScreen .slot{
+  transition:transform .16s ease,border-color .16s ease,background .16s ease
+}
+#lineupScreen .slot:has(.lineupMove:active){
+  border-color:#8a7137;background:#181710
+}
+
+/* Detalles de cartel / verbena sin usar imágenes externas. */
+.villageHero .rulesGrid:before{
+  content:"★  ★  ★";grid-column:1/-1;text-align:center;
+  color:rgba(225,185,87,.38);font-size:10px;letter-spacing:.6em;margin:1px 0 -2px
+}
+@media(max-width:520px){
+  .villageSeal{width:40px;height:40px;flex-basis:40px}
+  .brand{font-size:22px}
+  .version{max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .matchupTitle{font-size:29px}
+}
