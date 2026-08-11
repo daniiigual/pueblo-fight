@@ -29,9 +29,9 @@
         <div class="fiestaRibbon">TORNEO LOCAL · UNA NOCHE · UN CAMPEÓN</div>
         <div class="eyebrow">HECHO PARA JUGAR CON LA PEÑA</div>
         <h1>Fichad leyendas.<br>Montad el equipo.<br>Que hable el pueblo.</h1>
-        <p>Una subasta alrededor de la mesa, tres luchadores por equipo y dados capaces de hundir al favorito. El móvil va pasando de mano en mano.</p>
+        <p>Una subasta alrededor de la mesa, tres luchadores por equipo y combates que decidís vosotros. Los dados solo marcan quién golpea primero.</p>
         <div class="rulesGrid">
-          <div class="metric"><span>Presupuesto</span><b>30 🪙</b></div>
+          <div class="metric"><span>Presupuesto</span><b>20 🪙</b></div>
           <div class="metric"><span>Equipo</span><b>3 luchadores</b></div>
           <div class="metric"><span>Mínimo</span><b>4 jugadores</b></div>
           <div class="metric"><span>Torneo</span><b>Top 4</b></div>
@@ -55,7 +55,7 @@
           </div>
           <button id="addPlayerBtn" class="smallBtn">+ Jugador</button>
         </div>
-        <p>El orden se sortea al empezar. El primer jugador de cada subasta está obligado a abrir con 1 moneda.</p>
+        <p>El orden se sortea al empezar. El abridor está obligado a pujar, pero puede abrir con cualquier cantidad legal desde 1 moneda.</p>
         <div id="playersEditor" class="editorList"></div>
       </div>
 
@@ -74,8 +74,8 @@
       <div class="panel">
         <h2>Reglas de esta versión</h2>
         <ul class="rules">
-          <li>El abridor de cada subasta pone <b>1 moneda obligatoriamente</b>.</li>
-          <li>Si nadie le supera, se queda ese luchador por 1 moneda.</li>
+          <li>El abridor de cada subasta está <b>obligado a pujar</b>, pero puede abrir con cualquier cantidad legal desde 1 moneda.</li>
+          <li>Si nadie le supera, se queda el luchador por la cantidad con la que haya abierto.</li>
           <li>El turno de apertura va rotando en círculo entre quienes aún no han completado su equipo.</li>
           <li>Nunca puedes pujar una cantidad que te impida reservar <b>1 moneda por cada hueco restante</b>.</li>
           <li>Al completar 3 luchadores, sales automáticamente del draft.</li>
@@ -111,32 +111,42 @@
 
       <div class="panel fighterCard" id="currentFighterCard"></div>
 
-      <div class="panel auctionPanel">
-        <div class="auctionHeader">
-          <div>
-            <div class="eyebrow">PUJA ACTUAL</div>
-            <div id="auctionPrice" class="price">1</div>
+      <div class="panel auctionPanel premiumAuction">
+        <div class="auctionStatusGrid">
+          <div id="leaderVisual" class="auctionStatusCard leaderStatus">
+            <div class="auctionStatusIcon">👑</div>
+            <div>
+              <span>PUJA GANADORA</span>
+              <b id="auctionLeader">Todavía nadie</b>
+              <strong id="auctionPrice">—</strong>
+            </div>
           </div>
-          <div class="leaderBox">
-            <span>Va ganando</span>
-            <b id="auctionLeader">—</b>
+
+          <div id="turnBox" class="auctionStatusCard turnStatus">
+            <div class="auctionStatusIcon">👉</div>
+            <div>
+              <span>AHORA PUJA</span>
+              <b id="turnPlayer">—</b>
+              <small id="turnMoney">—</small>
+            </div>
           </div>
         </div>
 
-        <div id="turnBox" class="turnBox">
-          <span>Turno de</span>
-          <b id="turnPlayer">—</b>
-          <small id="turnMoney">—</small>
-        </div>
-
-        <div id="bidActions" class="bidActions">
-          <button class="btn bidBtn" data-step="1">+1</button>
-          <button class="btn bidBtn" data-step="2">+2</button>
-          <button class="btn bidBtn" data-step="5">+5</button>
-          <button id="passBidBtn" class="btn danger">Paso</button>
+        <div id="bidComposer" class="bidComposer">
+          <label for="bidAmount">Tu puja total</label>
+          <div class="bidInputRow">
+            <div class="coinInput">
+              <input id="bidAmount" type="number" inputmode="numeric" min="1" step="1" placeholder="Ej. 6">
+              <span>🪙</span>
+            </div>
+            <button id="placeBidBtn" class="btn">Confirmar puja</button>
+          </div>
+          <div id="bidHint" class="bidHint"></div>
+          <button id="passBidBtn" class="btn danger passFull">Paso en este luchador</button>
         </div>
 
         <div class="divider"></div>
+        <div class="auctionLogTitle">Lo que está pasando</div>
         <div id="auctionLog" class="log"></div>
       </div>
 

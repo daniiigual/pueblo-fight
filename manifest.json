@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#0b0b0a",
   "theme_color": "#15140f",
-  "description": "Pueblo Fight: subasta, dados y torneo de la peña.",
+  "description": "Pueblo Fight: subasta entre colegas y combates decididos por la mesa.",
   "icons": [
     {
       "src": "icon-192.png",

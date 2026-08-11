@@ -720,3 +720,269 @@ input:focus,select:focus{
   0%{transform:scale(.85);opacity:.4}
   100%{transform:scale(1);opacity:1}
 }
+
+
+/* =========================================================
+   v8 · subasta visual + combate decidido por la mesa
+   ========================================================= */
+
+.auctionStatusGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:13px;
+}
+.auctionStatusCard{
+  min-height:108px;
+  display:flex;
+  gap:11px;
+  align-items:center;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid #3b382d;
+  background:#11110e;
+  transition:.2s ease;
+}
+.auctionStatusIcon{
+  width:42px;height:42px;flex:0 0 42px;
+  display:grid;place-items:center;
+  border-radius:14px;
+  background:#211f18;
+  font-size:21px;
+}
+.auctionStatusCard span{
+  display:block;
+  color:#9e9685;
+  font-size:8px;
+  font-weight:1000;
+  letter-spacing:.13em;
+}
+.auctionStatusCard b{
+  display:block;
+  margin-top:4px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:18px;
+  color:#f1e7d2;
+}
+.auctionStatusCard strong{
+  display:block;
+  margin-top:4px;
+  font-size:27px;
+  color:#e4bb5a;
+}
+.auctionStatusCard small{
+  display:block;
+  color:#aaa18e;
+  font-size:9px;
+  margin-top:4px;
+  line-height:1.35;
+}
+.leaderStatus.isActive{
+  border-color:#8b7134;
+  background:
+    radial-gradient(circle at 15% 50%,rgba(225,185,87,.10),transparent 40%),
+    #15130e;
+  box-shadow:0 0 0 1px rgba(225,185,87,.07),0 13px 30px rgba(225,185,87,.06);
+}
+.turnStatus.isActive{
+  border-color:#9b493f;
+  background:
+    radial-gradient(circle at 15% 50%,rgba(168,61,52,.16),transparent 43%),
+    #17110f;
+  box-shadow:0 0 0 1px rgba(168,61,52,.08),0 13px 30px rgba(168,61,52,.08);
+}
+.bidComposer{
+  padding:15px;
+  border:1px solid #3b382e;
+  border-radius:18px;
+  background:linear-gradient(180deg,#181712,#11110e);
+}
+.bidComposer>label{
+  display:block;
+  margin-bottom:8px;
+  color:#e0d6c2;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+}
+.bidInputRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 1.15fr;
+  gap:9px;
+}
+.coinInput{
+  position:relative;
+}
+.coinInput input{
+  height:55px;
+  padding-right:46px;
+  font-size:23px;
+  font-weight:950;
+  color:#f1cb68;
+  border-color:#655633;
+}
+.coinInput span{
+  position:absolute;
+  right:14px;top:50%;
+  transform:translateY(-50%);
+  font-size:18px;
+  pointer-events:none;
+}
+.bidHint{
+  min-height:38px;
+  padding:10px 1px 2px;
+  color:#aaa18e;
+  font-size:11px;
+  line-height:1.45;
+}
+.bidHint b,.bidHint strong{color:#ead08b}
+.passFull{width:100%;margin-top:8px}
+.auctionLogTitle{
+  margin-bottom:8px;
+  color:#9f9786;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.teamCard.teamIsLeader{
+  border-color:#7e6731;
+  box-shadow:inset 0 0 0 1px rgba(225,185,87,.08);
+}
+.teamCard.teamIsTurn{
+  border-color:#874238;
+  box-shadow:inset 0 0 0 1px rgba(168,61,52,.10);
+}
+.auctionBadge{
+  display:inline-flex;
+  margin-top:5px;
+  padding:4px 7px;
+  border-radius:999px;
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+.leaderBadge{
+  background:rgba(225,185,87,.10);
+  color:#e7c46f;
+  border:1px solid rgba(225,185,87,.22);
+}
+.turnBadge{
+  background:rgba(168,61,52,.15);
+  color:#dfa09a;
+  border:1px solid rgba(168,61,52,.28);
+}
+
+.decisionRule{
+  margin:14px 0;
+  padding:13px;
+  border:1px solid #464234;
+  border-radius:15px;
+  background:#11110e;
+  color:#bbb19d;
+  font-size:11px;
+  line-height:1.55;
+  text-align:left;
+}
+.decisionRule b{color:#efd38f}
+
+.miniStatsCombat{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:3px;
+  margin-top:9px;
+}
+.miniStatsCombat span{
+  min-width:0;
+  padding:5px 2px;
+  border-radius:8px;
+  background:#171713;
+  color:#8f8879;
+  font-size:6px;
+  text-align:center;
+}
+.miniStatsCombat b{
+  display:block;
+  margin-top:2px;
+  color:#ddd3bf;
+  font-size:9px;
+}
+
+.initiativeWinner{
+  border-color:#8a7135 !important;
+  box-shadow:0 0 0 1px rgba(225,185,87,.11),0 14px 30px rgba(225,185,87,.07);
+}
+.manualDecision{
+  margin-top:15px;
+  padding:15px;
+  border-radius:18px;
+  border:1px solid #4a4637;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(225,185,87,.07),transparent 42%),
+    #11110e;
+  text-align:center;
+}
+.manualDecision h3{
+  margin:5px 0 5px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:20px;
+}
+.manualDecision p{
+  margin-bottom:12px;
+  font-size:11px;
+}
+.winnerChoiceGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+.winnerChoiceBtn{
+  min-width:0;
+  min-height:126px;
+  border:1px solid #5c5338;
+  border-radius:17px;
+  background:linear-gradient(180deg,#242116,#15130f);
+  color:#f3e8d1;
+  padding:12px 8px;
+  box-shadow:0 7px 0 #0a0a08,0 12px 24px rgba(0,0,0,.24);
+}
+.winnerChoiceBtn:active{
+  transform:translateY(4px);
+  box-shadow:0 3px 0 #0a0a08,0 7px 16px rgba(0,0,0,.22);
+}
+.choiceAvatar{
+  width:45px;height:45px;
+  display:grid;place-items:center;
+  margin:0 auto 8px;
+  border-radius:14px;
+  background:#342d1c;
+  color:#e7bf5d;
+  font-weight:1000;
+}
+.winnerChoiceBtn small{
+  display:block;
+  color:#9f9786;
+  font-size:7px;
+  letter-spacing:.1em;
+}
+.winnerChoiceBtn b{
+  display:block;
+  margin-top:5px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:16px;
+}
+.decisionLock{
+  border-color:#5d5336;
+  color:#e5cf93;
+}
+.manualWinnerReveal{
+  margin-top:14px;
+}
+
+@media(max-width:540px){
+  .auctionStatusGrid{grid-template-columns:1fr}
+  .auctionStatusCard{min-height:88px}
+  .bidInputRow{grid-template-columns:1fr}
+  .winnerChoiceBtn{min-height:116px}
+}

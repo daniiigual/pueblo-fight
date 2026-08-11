@@ -1,4 +1,4 @@
-const CACHE="pueblo-fight-v7-1";
+const CACHE="pueblo-fight-v8-1";
 const ASSETS=["./","./index.html","./styles.css","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener("activate",e=>e.waitUntil(Promise.all([
