@@ -13,79 +13,103 @@
 </head>
 <body>
   <div id="app" class="app">
-    <header class="topbar premiumTopbar">
+    <header class="topbar premiumTopbar appChrome">
+      <button id="backBtn" class="navIconBtn backNav" aria-label="Atrás" disabled>‹</button>
       <div class="brandLockup">
         <div class="villageSeal">PF</div>
-        <div>
+        <div class="brandText">
           <div class="brand">Pueblo <span>Fight</span></div>
           <div class="version">La plaza decide · edición de la peña</div>
         </div>
       </div>
-      <div id="phasePill" class="pill">Preparación</div>
+      <div class="chromeActions">
+        <div id="phasePill" class="pill">Preparación</div>
+        <button id="menuBtn" class="navIconBtn" aria-label="Menú de partida">•••</button>
+      </div>
     </header>
+    <div id="phaseRail" class="phaseRail hidden" aria-label="Progreso de la partida">
+      <span data-step="draft">Draft</span><i></i>
+      <span data-step="lineup">Alineación</span><i></i>
+      <span data-step="tournament">Torneo</span><i></i>
+      <span data-step="results">Final</span>
+    </div>
 
     <section id="setupScreen">
-      <div class="panel hero villageHero">
+      <div class="panel hero villageHero compactHero">
         <div class="fiestaRibbon">TORNEO LOCAL · UNA NOCHE · UN CAMPEÓN</div>
         <div class="eyebrow">HECHO PARA JUGAR CON LA PEÑA</div>
-        <h1>Fichad leyendas.<br>Montad el equipo.<br>Que hable el pueblo.</h1>
-        <p>Una subasta alrededor de la mesa, tres luchadores por equipo y combates que decidís vosotros. Los dados solo marcan quién golpea primero.</p>
+        <h1>Fichad leyendas.<br>Que hable el pueblo.</h1>
+        <p>Subasta rápida, equipos de 3 y combates decididos alrededor de la mesa.</p>
         <div class="rulesGrid">
           <div class="metric"><span>Presupuesto</span><b>20 🪙</b></div>
           <div class="metric"><span>Equipo</span><b>3 luchadores</b></div>
-          <div class="metric"><span>Mínimo</span><b>4 jugadores</b></div>
+          <div class="metric"><span>Jugadores</span><b id="setupPlayerMetric">6</b></div>
           <div class="metric"><span>Torneo</span><b>Top 4</b></div>
         </div>
       </div>
 
-      <div id="continuePanel" class="panel hidden">
-        <h2>Partida en curso</h2>
-        <p>Hay una partida guardada en este iPhone.</p>
+      <div id="continuePanel" class="panel continueCard hidden">
+        <div>
+          <div class="eyebrow">PARTIDA GUARDADA</div>
+          <h2 id="continueTitle">Hay una partida en curso</h2>
+          <p id="continueDescription">Puedes seguir exactamente donde lo dejaste.</p>
+        </div>
         <div class="actions">
           <button id="continueBtn" class="btn">Continuar</button>
-          <button id="discardGameBtn" class="btn secondary">Borrar partida</button>
+          <button id="discardGameBtn" class="btn secondary">Terminar</button>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="sectionHead">
-          <div>
-            <div class="eyebrow">PASO 1</div>
-            <h2>Jugadores reales</h2>
+      <details id="playersDisclosure" class="panel setupDisclosure" open>
+        <summary>
+          <div><div class="eyebrow">PASO 1</div><b>Jugadores</b></div>
+          <span id="playersSummaryCount" class="summaryCount">6 configurados</span>
+        </summary>
+        <div class="disclosureBody">
+          <div class="sectionHead compactHead">
+            <p>El orden se sortea al empezar.</p>
+            <button id="addPlayerBtn" class="smallBtn">+ Jugador</button>
           </div>
-          <button id="addPlayerBtn" class="smallBtn">+ Jugador</button>
+          <div id="playersEditor" class="editorList"></div>
         </div>
-        <p>El orden se sortea al empezar. El abridor está obligado a pujar, pero puede abrir con cualquier cantidad legal desde 1 moneda.</p>
-        <div id="playersEditor" class="editorList"></div>
-      </div>
+      </details>
 
-      <div class="panel">
-        <div class="sectionHead">
-          <div>
-            <div class="eyebrow">PASO 2</div>
-            <h2>Luchadores del pueblo</h2>
+      <details id="fightersDisclosure" class="panel setupDisclosure">
+        <summary>
+          <div><div class="eyebrow">PASO 2</div><b>Luchadores</b></div>
+          <span id="fightersSummaryCount" class="summaryCount">18 configurados</span>
+        </summary>
+        <div class="disclosureBody">
+          <div class="managerToolbar">
+            <div class="searchWrap"><span>⌕</span><input id="fighterSearch" type="search" placeholder="Buscar luchador" autocomplete="off"></div>
+            <button id="addFighterBtn" class="smallBtn">+ Luchador</button>
           </div>
-          <button id="addFighterBtn" class="smallBtn">+ Luchador</button>
+          <p id="fighterRequirement"></p>
+          <div id="fightersEditor" class="fighterEditor compactFighterEditor"></div>
         </div>
-        <p id="fighterRequirement"></p>
-        <div id="fightersEditor" class="fighterEditor"></div>
-      </div>
+      </details>
 
-      <div class="panel">
-        <h2>Reglas de esta versión</h2>
-        <ul class="rules">
-          <li>El abridor de cada subasta está <b>obligado a pujar</b>, pero puede abrir con cualquier cantidad legal desde 1 moneda.</li>
-          <li>Si nadie le supera, se queda el luchador por la cantidad con la que haya abierto.</li>
-          <li>El turno de apertura va rotando en círculo entre quienes aún no han completado su equipo.</li>
-          <li>Nunca puedes pujar una cantidad que te impida reservar <b>1 moneda por cada hueco restante</b>.</li>
-          <li>Al completar 3 luchadores, sales automáticamente del draft.</li>
-          <li>Si sois más de 4, solo los <b>4 equipos con mayor media</b> pasan al torneo. En empate, gana quien conserve más monedas.</li>
-        </ul>
-      </div>
+      <details class="panel setupDisclosure rulesDisclosure">
+        <summary>
+          <div><div class="eyebrow">REGLAS</div><b>Cómo se juega</b></div>
+          <span class="summaryCount">Ver</span>
+        </summary>
+        <div class="disclosureBody">
+          <ul class="rules">
+            <li>El abridor debe pujar, pero puede elegir cualquier cantidad legal desde <b>1 moneda</b>.</li>
+            <li>Nunca puedes gastar las monedas necesarias para cubrir los huecos que te faltan.</li>
+            <li>Al completar 3 luchadores sales del draft.</li>
+            <li>Si sois más de 4, pasan los <b>4 equipos con mayor media</b>; en empate, más monedas.</li>
+            <li>En combate, los dados solo deciden quién golpea primero. <b>Vosotros decidís el ganador.</b></li>
+          </ul>
+        </div>
+      </details>
 
-      <button id="startGameBtn" class="btn giant">Sortear y empezar el draft</button>
+      <div class="setupStartDock">
+        <div id="setupReadyText" class="setupReadyText">Listo para jugar</div>
+        <button id="startGameBtn" class="btn giant">Sortear y empezar</button>
+      </div>
     </section>
-
     <section id="orderScreen" class="hidden">
       <div class="panel">
         <div class="eyebrow">SORTEO COMPLETADO</div>
@@ -142,6 +166,7 @@
             <button id="placeBidBtn" class="btn">Confirmar puja</button>
           </div>
           <div id="bidHint" class="bidHint"></div>
+          <div id="quickBidRow" class="quickBidRow" aria-label="Atajos de puja"></div>
           <button id="passBidBtn" class="btn danger passFull">Paso en este luchador</button>
         </div>
 
@@ -215,7 +240,31 @@
     </section>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="sheetBackdrop" class="sheetBackdrop hidden"></div>
+  <aside id="appSheet" class="appSheet hidden" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheetHandle"></div>
+    <div class="sheetHeader">
+      <div><div class="eyebrow">PUEBLO FIGHT</div><h2 id="sheetTitle">Partida</h2></div>
+      <button id="closeSheetBtn" class="navIconBtn" aria-label="Cerrar">×</button>
+    </div>
+    <button id="sheetUndoBtn" class="sheetAction"><span>↶</span><div><b>Deshacer último paso</b><small id="undoDescription">Nada que deshacer</small></div></button>
+    <button id="sheetResumeBtn" class="sheetAction"><span>▶</span><div><b>Continuar jugando</b><small id="sheetPhaseDescription">Partida guardada automáticamente</small></div></button>
+    <button id="sheetResetDefaultsBtn" class="sheetAction"><span>⟳</span><div><b>Restaurar datos de ejemplo</b><small>Unai, Pol, Fran, Andres, Dani, Peke y los 18 luchadores</small></div></button>
+    <button id="sheetFinishBtn" class="sheetAction destructive"><span>■</span><div><b>Terminar partida</b><small>Vuelve a configuración sin borrar jugadores ni luchadores</small></div></button>
+  </aside>
+
+  <div id="confirmBackdrop" class="sheetBackdrop hidden"></div>
+  <div id="confirmDialog" class="confirmDialog hidden" role="alertdialog" aria-modal="true">
+    <div class="eyebrow">CONFIRMAR</div>
+    <h2 id="confirmTitle">¿Seguro?</h2>
+    <p id="confirmText"></p>
+    <div class="confirmActions">
+      <button id="confirmCancelBtn" class="btn secondary">Cancelar</button>
+      <button id="confirmOkBtn" class="btn danger">Confirmar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="./app.js"></script>
 </body>
 </html>

@@ -986,3 +986,56 @@ input:focus,select:focus{
   .bidInputRow{grid-template-columns:1fr}
   .winnerChoiceBtn{min-height:116px}
 }
+
+
+/* =========================================================
+   v9 · navegación, setup compacto, undo y atajos de puja
+   ========================================================= */
+.app{padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.appChrome{
+  position:sticky;top:env(safe-area-inset-top);z-index:80;
+  margin:0 -4px 12px;padding:8px 5px 10px;
+  background:linear-gradient(180deg,rgba(11,11,10,.96),rgba(11,11,10,.88));
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
+}
+.brandText{min-width:0}.brandLockup{min-width:0;flex:1}.chromeActions{display:flex;align-items:center;gap:7px}
+.navIconBtn{
+  min-width:46px;min-height:46px;border-radius:15px;border:1px solid #3c392e;
+  background:#171612;color:#eee4cf;font-size:18px;font-weight:900;display:grid;place-items:center
+}
+.navIconBtn:disabled{opacity:.22}.backNav{font-size:34px;line-height:1;padding-bottom:4px}.backNav.hasHistory{border-color:#665631}
+.phaseRail{display:flex;align-items:center;gap:7px;margin:-3px 2px 14px;padding:0 2px}
+.phaseRail span{font-size:8px;font-weight:950;letter-spacing:.07em;color:#635f55;text-transform:uppercase;white-space:nowrap}
+.phaseRail span.active{color:#e4bd5f}.phaseRail span.done{color:#93835f}.phaseRail i{height:1px;flex:1;background:#302e27}
+.compactHero{padding-bottom:17px}.compactHero h1{font-size:30px}.compactHero p{margin-bottom:12px}
+.continueCard{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}.continueCard p{margin-bottom:0}.continueCard .actions{min-width:190px}
+.setupDisclosure{padding:0;overflow:hidden}.setupDisclosure>summary{
+  list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  min-height:76px;padding:15px 17px;cursor:pointer;user-select:none
+}
+.setupDisclosure>summary::-webkit-details-marker{display:none}.setupDisclosure>summary b{display:block;font-family:Georgia,"Times New Roman",serif;font-size:20px}
+.setupDisclosure>summary:after{content:"⌄";font-size:20px;color:#8d856f;transition:.18s transform}.setupDisclosure[open]>summary:after{transform:rotate(180deg)}
+.summaryCount{margin-left:auto;color:#b8ad98;font-size:11px}.disclosureBody{border-top:1px solid #302e27;padding:14px 16px 16px}
+.compactHead{align-items:center}.compactHead p{margin:0;font-size:12px}.managerToolbar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:10px}
+.searchWrap{position:relative}.searchWrap>span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#8f8878}.searchWrap input{padding-left:37px;min-height:48px}
+.fighterEditor.compactFighterEditor{gap:7px}.fighterAccordion{padding:0;overflow:hidden}.fighterAccordion.searchHidden{display:none}
+.fighterEditSummary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;padding:10px 12px;cursor:pointer}.fighterEditSummary::-webkit-details-marker{display:none}
+.fighterEditSummary>div{display:flex;align-items:center;gap:9px;min-width:0}.fighterIndex{width:29px;height:29px;border-radius:9px;background:#28251b;display:grid;place-items:center;color:#d9b55d;font-size:10px;font-weight:950;flex:0 0 29px}
+.fighterSummaryName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fighterSummaryAverage{font-size:10px;color:#9e9684;white-space:nowrap}.fighterSummaryAverage strong{color:#e5bb57;font-size:15px}
+.fighterEditBody{border-top:1px solid #2d2b24;padding:10px 11px 12px}.fighterAccordion[open]{border-color:#554b30}
+.setupStartDock{
+  position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:60;
+  margin-top:10px;padding:10px;border-radius:20px;border:1px solid rgba(225,185,87,.27);
+  background:rgba(18,17,13,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 18px 50px rgba(0,0,0,.42)
+}
+.setupReadyText{text-align:center;color:#9f9785;font-size:9px;margin:0 0 7px;text-transform:uppercase;letter-spacing:.08em}
+.quickBidRow{display:flex;gap:7px;overflow-x:auto;padding:5px 0 2px;scrollbar-width:none}.quickBidRow::-webkit-scrollbar{display:none}
+.quickBidBtn{flex:0 0 auto;min-height:44px;padding:8px 12px;border-radius:13px;border:1px solid #4a4536;background:#1b1a15;color:#e1d6bf;font-weight:900;font-size:11px}
+.quickBidBtn.selected{border-color:#d1aa4d;background:#2b2414;color:#f0cd73}.quickBidBtn.maxQuick{border-color:#754039;color:#e6a19a}
+.sheetBackdrop{position:fixed;inset:0;z-index:180;background:rgba(0,0,0,.58);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.appSheet{position:fixed;left:0;right:0;bottom:0;z-index:190;max-width:760px;margin:auto;padding:10px 14px calc(18px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0;border:1px solid #454034;border-bottom:0;background:linear-gradient(180deg,#242219,#12120f);box-shadow:0 -30px 80px rgba(0,0,0,.5)}
+.sheetHandle{width:42px;height:5px;border-radius:999px;background:#575146;margin:2px auto 14px}.sheetHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.sheetHeader h2{margin:0}
+.sheetAction{width:100%;min-height:66px;display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;border:0;border-top:1px solid #343129;background:transparent;color:#eee4d1}.sheetAction>span{width:39px;height:39px;display:grid;place-items:center;border-radius:12px;background:#29261e;font-size:18px}.sheetAction div{flex:1}.sheetAction b,.sheetAction small{display:block}.sheetAction b{font-size:14px}.sheetAction small{font-size:9px;color:#99917f;margin-top:3px;line-height:1.35}.sheetAction.destructive{color:#efaaa4}.sheetAction:disabled{opacity:.35}
+.confirmDialog{position:fixed;z-index:210;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:20px;border-radius:22px;border:1px solid #4a4435;background:linear-gradient(180deg,#242119,#14130f);box-shadow:0 30px 90px rgba(0,0,0,.65)}.confirmDialog p{margin-bottom:16px}.confirmActions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:600px){.version{display:none}.villageSeal{width:36px;height:36px;flex-basis:36px}.brand{font-size:20px}.pill{display:none}.continueCard{grid-template-columns:1fr}.continueCard .actions{min-width:0}.appChrome{gap:7px}.navIconBtn{min-width:44px;min-height:44px}.phaseRail{padding:0 7px}.phaseRail span{font-size:7px}}

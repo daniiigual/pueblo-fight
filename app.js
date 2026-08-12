@@ -3,7 +3,8 @@ const TEAM_SIZE = 3;
 const START_MONEY = 20;
 const QUALIFIERS = 4;
 const CONFIG_KEY = "puebloFightV8Config";
-const GAME_KEY = "puebloFightV8Game";
+const GAME_KEY = "puebloFightV9Game";
+const UNDO_KEY = "puebloFightV9Undo";
 
 const $ = id => document.getElementById(id);
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
@@ -17,6 +18,10 @@ const esc = v => String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 const attr = esc;
 
 let duelUi = null;
+let uiTimers=[];
+let auctionTimer=null;
+let pendingConfirm=null;
+let undoStack=loadUndoStack();
 
 let config = loadConfig();
 let game = loadGame();
@@ -68,16 +73,111 @@ function loadGame(){
   }catch{return null}
 }
 function saveGame(){
-  if(game) localStorage.setItem(GAME_KEY,JSON.stringify(game));
+  if(game)localStorage.setItem(GAME_KEY,JSON.stringify(game));
+  else localStorage.removeItem(GAME_KEY);
+  updateChrome();
+}
+function loadUndoStack(){
+  try{return JSON.parse(localStorage.getItem(UNDO_KEY)||"[]")}catch{return []}
+}
+function saveUndoStack(){
+  localStorage.setItem(UNDO_KEY,JSON.stringify(undoStack.slice(-35)));
+}
+function clearUiTimers(){
+  uiTimers.forEach(clearTimeout);uiTimers=[];
+  if(auctionTimer){clearTimeout(auctionTimer);auctionTimer=null}
+  document.querySelectorAll('.countdownOverlay').forEach(x=>x.remove());
+  duelUi=null;
+}
+function later(fn,ms){const id=setTimeout(()=>{uiTimers=uiTimers.filter(x=>x!==id);fn()},ms);uiTimers.push(id);return id}
+function snapshot(label){
+  const snap={
+    label,
+    game:game?JSON.parse(JSON.stringify(game)):null,
+    config:JSON.parse(JSON.stringify(config))
+  };
+  const encoded=JSON.stringify(snap);
+  const last=undoStack.length?JSON.stringify(undoStack[undoStack.length-1]):null;
+  if(encoded!==last){undoStack.push(snap);undoStack=undoStack.slice(-35);saveUndoStack()}
+  updateChrome();
+}
+function clearUndo(){undoStack=[];localStorage.removeItem(UNDO_KEY);updateChrome()}
+function undoLast(){
+  if(!undoStack.length){toast("No hay nada que deshacer.");return}
+  clearUiTimers();
+  const snap=undoStack.pop();saveUndoStack();
+  game=snap.game?JSON.parse(JSON.stringify(snap.game)):null;
+  config=JSON.parse(JSON.stringify(snap.config));
+  saveConfig();saveGame();closeSheet();
+  renderCurrent();
+  toast(`↶ ${snap.label}`);
 }
 function clearGame(){
-  game=null; localStorage.removeItem(GAME_KEY);
+  clearUiTimers();
+  game=null;localStorage.removeItem(GAME_KEY);
+  updateChrome();
 }
-function setPhase(text){$("phasePill").textContent=text}
+function setPhase(text){$("phasePill").textContent=text;updateChrome()}
 function showOnly(id){
   ["setupScreen","orderScreen","draftScreen","qualifierScreen","lineupCoverScreen","lineupScreen","tournamentScreen","resultsScreen"]
     .forEach(x=>$(x).classList.toggle("hidden",x!==id));
+  updateChrome();
   window.scrollTo({top:0,behavior:"smooth"});
+}
+function currentStep(){
+  if(!game)return null;
+  if(game.phase==="order"||game.phase==="draft"||game.phase==="qualifiers")return "draft";
+  if(game.phase==="lineup"||game.phase==="lineupCover")return "lineup";
+  if(game.phase==="tournament")return "tournament";
+  if(game.phase==="results")return "results";
+  return null;
+}
+function updateChrome(){
+  const back=$("backBtn"),rail=$("phaseRail");
+  if(back){back.disabled=!undoStack.length;back.classList.toggle("hasHistory",!!undoStack.length)}
+  if(rail){
+    const step=currentStep();rail.classList.toggle("hidden",!step);
+    const order=["draft","lineup","tournament","results"],idx=order.indexOf(step);
+    rail.querySelectorAll("span").forEach((el,i)=>{el.classList.toggle("active",i===idx);el.classList.toggle("done",i<idx)});
+  }
+  if($("sheetFinishBtn"))$("sheetFinishBtn").classList.toggle("hidden",!game);
+  if($("sheetResumeBtn"))$("sheetResumeBtn").classList.toggle("hidden",!game);
+  if($("sheetUndoBtn")){
+    $("sheetUndoBtn").disabled=!undoStack.length;
+    $("undoDescription").textContent=undoStack.length?undoStack[undoStack.length-1].label:"Nada que deshacer";
+  }
+}
+function renderCurrent(){
+  renderSetup();
+  if(!game){setPhase("Preparación");showOnly("setupScreen");return}
+  switch(game.phase){
+    case "order":renderOrder();break;
+    case "draft":setPhase("Subasta");showOnly("draftScreen");if(game.auction)renderDraft();else startNextAuction();break;
+    case "qualifiers":renderQualifiers();break;
+    case "lineupCover":renderLineupCover();break;
+    case "lineup":renderLineup();break;
+    case "tournament":game.tournament?.reveal?renderTournament():startTournament();break;
+    case "results":renderResults();break;
+    default:setPhase("Preparación");showOnly("setupScreen");
+  }
+}
+function openSheet(){
+  $("appSheet").classList.remove("hidden");$("sheetBackdrop").classList.remove("hidden");
+  $("sheetPhaseDescription").textContent=game?`Fase actual: ${$("phasePill").textContent} · guardado automático`:"Configura la próxima partida";
+  updateChrome();
+}
+function closeSheet(){$("appSheet").classList.add("hidden");$("sheetBackdrop").classList.add("hidden")}
+function askConfirm(title,text,confirmText,onConfirm){
+  pendingConfirm=onConfirm;
+  $("confirmTitle").textContent=title;$("confirmText").textContent=text;$("confirmOkBtn").textContent=confirmText;
+  $("confirmDialog").classList.remove("hidden");$("confirmBackdrop").classList.remove("hidden");
+}
+function closeConfirm(){pendingConfirm=null;$("confirmDialog").classList.add("hidden");$("confirmBackdrop").classList.add("hidden")}
+function finishGameNow(){
+  clearGame();clearUndo();closeSheet();closeConfirm();renderSetup();setPhase("Preparación");showOnly("setupScreen");toast("Partida terminada. La configuración se conserva.")
+}
+function resetDefaults(){
+  config=defaultConfig();saveConfig();clearGame();clearUndo();closeSheet();closeConfirm();renderSetup();showOnly("setupScreen");toast("Datos de ejemplo restaurados.")
 }
 function toast(msg){
   $("toast").textContent=msg;$("toast").classList.remove("hidden");
@@ -104,38 +204,57 @@ function ensureMinimumFighters(){
   }
 }
 function renderSetup(){
-  ensureMinimumFighters();
-  saveConfig();
+  ensureMinimumFighters();saveConfig();
   $("continuePanel").classList.toggle("hidden",!game);
+  if(game){
+    $("continueTitle").textContent=`Partida en curso · ${$("phasePill").textContent||"guardada"}`;
+    $("continueDescription").textContent="Puedes continuar o terminarla sin perder tus jugadores ni luchadores.";
+  }
+  $("setupPlayerMetric").textContent=config.players.length;
+  $("playersSummaryCount").textContent=`${config.players.length} configurados`;
+  $("fightersSummaryCount").textContent=`${config.fighters.length} configurados`;
 
   $("playersEditor").innerHTML=config.players.map((p,i)=>`
     <div class="playerRow">
       <div class="orderNum">${i+1}</div>
       <input data-player-id="${p.id}" value="${attr(p.name)}" maxlength="28" aria-label="Nombre jugador ${i+1}">
-      <button class="iconBtn removePlayer" data-player-id="${p.id}" ${config.players.length<=4?"disabled":""}>×</button>
+      <button class="iconBtn removePlayer" data-player-id="${p.id}" ${config.players.length<=4?"disabled":""} aria-label="Eliminar ${attr(p.name)}">×</button>
     </div>`).join("");
 
   const need=requiredFighters();
-  $("fighterRequirement").innerHTML=`Para ${config.players.length} jugadores hacen falta <b>${need} luchadores</b> en el draft. Tienes ${config.fighters.length}. ${config.fighters.length>need?`Se sortearán ${need} de los ${config.fighters.length} guardados.`:"Todos entrarán en esta partida."}`;
+  $("fighterRequirement").innerHTML=`Necesitas <b>${need}</b> para ${config.players.length} jugadores. Tienes <b>${config.fighters.length}</b>. ${config.fighters.length>need?`Se sortearán ${need}.`:"Entran todos."}`;
+  $("setupReadyText").textContent=config.fighters.length>=need?`${config.players.length} jugadores · ${need} luchadores entrarán al draft`:`Faltan ${need-config.fighters.length} luchadores`;
 
   $("fightersEditor").innerHTML=config.fighters.map((f,i)=>fighterEditorHtml(f,i)).join("");
   bindSetupInputs();
+  const search=$("fighterSearch");if(search){search.value="";search.oninput=()=>filterFighters(search.value)}
+  updateChrome();
 }
 function fighterEditorHtml(f,i){
-  return `<div class="fighterEditCard">
-    <div class="fighterEditTop">
-      <input class="fighterNameInput" data-fighter-id="${f.id}" value="${attr(f.name)}" maxlength="30" aria-label="Nombre luchador ${i+1}">
-      <button class="iconBtn removeFighter" data-fighter-id="${f.id}" ${config.fighters.length<=requiredFighters()?"disabled":""}>×</button>
+  return `<details class="fighterEditCard fighterAccordion" data-fighter-name="${attr(f.name.toLowerCase())}">
+    <summary class="fighterEditSummary">
+      <div><span class="fighterIndex">${i+1}</span><b class="fighterSummaryName">${esc(f.name)}</b></div>
+      <span class="fighterSummaryAverage">Media <strong id="summary-avg-${f.id}">${overall(f)}</strong></span>
+    </summary>
+    <div class="fighterEditBody">
+      <div class="fighterEditTop">
+        <input class="fighterNameInput" data-fighter-id="${f.id}" value="${attr(f.name)}" maxlength="30" aria-label="Nombre luchador ${i+1}">
+        <button class="iconBtn removeFighter" data-fighter-id="${f.id}" ${config.fighters.length<=requiredFighters()?"disabled":""} aria-label="Eliminar ${attr(f.name)}">×</button>
+      </div>
+      <div class="statsEditor">
+        ${statInput("FUE","power",f)}
+        ${statInput("TEC","technique",f)}
+        ${statInput("VEL","speed",f)}
+        ${statInput("AGU","stamina",f)}
+        ${statInput("COR","grit",f)}
+      </div>
+      <div class="fighterAverage">Media <b id="avg-${f.id}">${overall(f)}</b></div>
     </div>
-    <div class="statsEditor">
-      ${statInput("FUE","power",f)}
-      ${statInput("TEC","technique",f)}
-      ${statInput("VEL","speed",f)}
-      ${statInput("AGU","stamina",f)}
-      ${statInput("COR","grit",f)}
-    </div>
-    <div class="fighterAverage">Media <b id="avg-${f.id}">${overall(f)}</b></div>
-  </div>`;
+  </details>`;
+}
+function filterFighters(query){
+  const q=String(query||"").trim().toLowerCase();
+  document.querySelectorAll(".fighterAccordion").forEach(el=>el.classList.toggle("searchHidden",q && !el.dataset.fighterName.includes(q)));
 }
 function statInput(label,key,f){
   return `<label>${label}<input type="number" inputmode="numeric" min="1" max="100" class="fighterStatInput" data-fighter-id="${f.id}" data-stat="${key}" value="${Number(f[key])}"></label>`;
@@ -152,7 +271,10 @@ function bindSetupInputs(){
   }));
   document.querySelectorAll(".fighterNameInput").forEach(el=>el.addEventListener("input",e=>{
     const f=config.fighters.find(x=>x.id===e.target.dataset.fighterId);
-    if(f){f.name=e.target.value;saveConfig()}
+    if(f){
+      f.name=e.target.value;saveConfig();
+      const card=e.target.closest(".fighterAccordion");if(card){card.dataset.fighterName=f.name.toLowerCase();card.querySelector(".fighterSummaryName").textContent=f.name}
+    }
   }));
   document.querySelectorAll(".fighterStatInput").forEach(el=>el.addEventListener("change",e=>{
     const f=config.fighters.find(x=>x.id===e.target.dataset.fighterId);
@@ -160,6 +282,7 @@ function bindSetupInputs(){
     f[e.target.dataset.stat]=clamp(parseInt(e.target.value||50,10),1,100);
     e.target.value=f[e.target.dataset.stat];
     $(`avg-${f.id}`).textContent=overall(f);
+    const summary=$(`summary-avg-${f.id}`);if(summary)summary.textContent=overall(f);
     saveConfig();
   }));
   document.querySelectorAll(".removeFighter").forEach(btn=>btn.addEventListener("click",()=>{
@@ -188,6 +311,7 @@ function validateSetup(){
 
 function startGame(){
   const err=validateSetup();if(err){toast(err);return}
+  snapshot("Volver a configuración")
   saveConfig();
   const selected=shuffle(config.fighters).slice(0,requiredFighters()).map(f=>({...f}));
   const players=config.players.map(p=>({id:p.id,name:p.name.trim(),money:START_MONEY,roster:[],lineup:[],qualified:false}));
@@ -206,6 +330,7 @@ function renderOrder(){
     <div class="orderItem"><div class="orderBadge">${i+1}</div><div><b>${esc(playerById(id).name)}</b><div class="version">${i===0?"Abre la primera subasta":"Después continúa el círculo"}</div></div></div>`).join("");
 }
 function beginDraft(){
+  snapshot("Volver al sorteo");
   game.phase="draft";saveGame();setPhase("Subasta");showOnly("draftScreen");startNextAuction();
 }
 function maxBidFor(p){
@@ -265,6 +390,16 @@ function findNextBidder(afterIndex){
   }
   return null;
 }
+function renderQuickBidShortcuts(min,max){
+  const row=$("quickBidRow");if(!row)return;
+  const raw=[min,min+1,min+2,min+5,max].filter(v=>v>=min&&v<=max);
+  const values=[...new Set(raw)];
+  row.innerHTML=values.map((v,i)=>`<button type="button" class="quickBidBtn ${v===max?"maxQuick":""}" data-amount="${v}">${i===0?`Mín. ${v}`:v===max?`Máx. ${v}`:`${v} 🪙`}</button>`).join("");
+  row.querySelectorAll(".quickBidBtn").forEach(btn=>btn.addEventListener("click",()=>{
+    $("bidAmount").value=btn.dataset.amount;$("bidAmount").focus();
+    row.querySelectorAll(".quickBidBtn").forEach(x=>x.classList.toggle("selected",x===btn));
+  }));
+}
 function placeBid(){
   const a=game.auction;
   if(!a?.turnId)return;
@@ -289,6 +424,7 @@ function placeBid(){
     return;
   }
 
+  snapshot(`Deshacer puja de ${p.name}`);
   const opening=!a.leaderId;
   a.bid=target;
   a.leaderId=p.id;
@@ -303,7 +439,7 @@ function placeBid(){
   saveGame();
   renderDraft();
 
-  if(!a.turnId)setTimeout(settleAuction,500);
+  if(!a.turnId){auctionTimer=setTimeout(()=>{auctionTimer=null;settleAuction()},500)}
 }
 function passBid(){
   const a=game.auction;
@@ -316,6 +452,7 @@ function passBid(){
     return;
   }
 
+  snapshot(`Deshacer paso de ${p.name}`);
   if(!a.passed.includes(p.id))a.passed.push(p.id);
   a.log.unshift(`✋ ${p.name} pasa.`);
 
@@ -325,7 +462,7 @@ function passBid(){
   saveGame();
   renderDraft();
 
-  if(!a.turnId)setTimeout(settleAuction,450);
+  if(!a.turnId){auctionTimer=setTimeout(()=>{auctionTimer=null;settleAuction()},450)}
 }
 function settleAuction(){
   const a=game.auction;
@@ -344,7 +481,7 @@ function settleAuction(){
 
   saveGame();
   toast(`🔨 ${winner.name} ficha a ${fighter.name} por ${a.bid} 🪙`);
-  setTimeout(startNextAuction,650);
+  auctionTimer=setTimeout(()=>{auctionTimer=null;startNextAuction()},650);
 }
 function renderDraft(){
   setPhase("Subasta");showOnly("draftScreen");
@@ -384,6 +521,7 @@ function renderDraft(){
     $("bidHint").innerHTML=isOpener
       ? `<b>${esc(p.name)} abre.</b> Puede empezar con cualquier cantidad entre <strong>1 y ${max}</strong> monedas.`
       : `Para ponerse primero debe pujar al menos <strong>${min} 🪙</strong>. Máximo: <strong>${max} 🪙</strong>.`;
+    renderQuickBidShortcuts(min,max);
 
     $("passBidBtn").disabled=isOpener;
     $("passBidBtn").textContent=isOpener?"El abridor no puede pasar":"Paso en este luchador";
@@ -455,6 +593,7 @@ function renderQualifiers(){
   }).join("");
 }
 function prepareLineups(){
+  snapshot("Volver a clasificación");
   game.lineupPurpose="semis";
   game.lineupQueue=game.ranking.slice(0,QUALIFIERS);
   game.lineupIndex=0;game.phase="lineupCover";saveGame();renderLineupCover();
@@ -504,12 +643,14 @@ function renderLineup(){
   }));
 }
 function moveLineup(i,dir){
+  snapshot("Deshacer cambio de alineación");
   const p=playerById(game.lineupQueue[game.lineupIndex]);
   const j=i+dir;if(j<0||j>=p.lineup.length)return;
   [p.lineup[i],p.lineup[j]]=[p.lineup[j],p.lineup[i]];
   saveGame();renderLineup();
 }
 function saveCurrentLineup(){
+  snapshot("Volver a la alineación anterior");
   game.lineupIndex++;
   if(game.lineupIndex<game.lineupQueue.length){
     game.phase="lineupCover";saveGame();renderLineupCover();
@@ -872,6 +1013,7 @@ function chooseDuelWinner(fighterId){
   if(!r.initiativeRevealed || r.resolved)return;
   if(fighterId!==d.faId && fighterId!==d.fbId)return;
 
+  snapshot("Cambiar ganador del enfrentamiento");
   d.winnerId=fighterId;
   r.resolved=true;
   recalcMatch(m);
@@ -892,9 +1034,9 @@ function runCountdownAndReveal(){
     overlay.innerHTML=`<div class="countdownNumber">${values[i]}</div>`;
     i++;
     if(i<values.length){
-      setTimeout(tick,520);
+      later(tick,520);
     }else{
-      setTimeout(()=>{
+      later(()=>{
         overlay.remove();
         startSequentialInitiativeReveal();
       },400);
@@ -915,19 +1057,19 @@ function startSequentialInitiativeReveal(){
   };
   renderTournament();
 
-  setTimeout(()=>{
+  later(()=>{
     if(!duelUi)return;
     duelUi.stage="revealA";
     renderTournament();
   },900);
 
-  setTimeout(()=>{
+  later(()=>{
     if(!duelUi)return;
     duelUi.stage="rollB";
     renderTournament();
   },1650);
 
-  setTimeout(()=>{
+  later(()=>{
     duelUi=null;
     r.initiativeRevealed=true;
     saveGame();
@@ -960,6 +1102,7 @@ function nextTournamentButtonLabel(){
   return "Levantar el trofeo";
 }
 function advanceTournament(){
+  snapshot("Volver al resultado anterior");
   const r=game.tournament.reveal;
   if(r.matchKey==="semi1"){
     r.matchKey="semi2";r.stage="intro";r.duelIndex=0;r.exchangeIndex=0;r.resolved=false;
@@ -1005,30 +1148,13 @@ function matchHtml(m){
   </div>`;
 }
 
-function resumeGame(){
-  if(!game)return;
-  switch(game.phase){
-    case "order":renderOrder();break;
-    case "draft":
-      setPhase("Subasta");showOnly("draftScreen");
-      if(game.auction) renderDraft(); else startNextAuction();
-      break;
-    case "qualifiers":renderQualifiers();break;
-    case "lineupCover":renderLineupCover();break;
-    case "lineup":renderLineup();break;
-    case "tournament":
-      if(game.tournament?.reveal)renderTournament();
-      else startTournament();
-      break;
-    case "results":renderResults();break;
-    default:showOnly("setupScreen");
-  }
-}
+function resumeGame(){renderCurrent();}
+
 function samePlayersRematch(){
-  clearGame();renderSetup();startGame();
+  clearGame();clearUndo();renderSetup();startGame();
 }
 function backToSetup(){
-  clearGame();setPhase("Preparación");showOnly("setupScreen");renderSetup();
+  clearGame();clearUndo();setPhase("Preparación");showOnly("setupScreen");renderSetup();
 }
 
 $("addPlayerBtn").addEventListener("click",addPlayer);
@@ -1044,9 +1170,23 @@ $("saveLineupBtn").addEventListener("click",saveCurrentLineup);
 $("rematchBtn").addEventListener("click",samePlayersRematch);
 $("backSetupBtn").addEventListener("click",backToSetup);
 $("continueBtn").addEventListener("click",resumeGame);
-$("discardGameBtn").addEventListener("click",()=>{clearGame();renderSetup();toast("Partida borrada.")});
+$("discardGameBtn").addEventListener("click",()=>askConfirm("¿Terminar esta partida?","Volverás a configuración. Los jugadores y luchadores se conservarán.","Terminar",finishGameNow));
 
-renderSetup();
+$("backBtn").addEventListener("click",undoLast);
+$("menuBtn").addEventListener("click",openSheet);
+$("closeSheetBtn").addEventListener("click",closeSheet);
+$("sheetBackdrop").addEventListener("click",closeSheet);
+$("sheetUndoBtn").addEventListener("click",undoLast);
+$("sheetResumeBtn").addEventListener("click",()=>{closeSheet();renderCurrent()});
+$("sheetFinishBtn").addEventListener("click",()=>askConfirm("¿Terminar la partida?","Se eliminará la partida en curso, pero conservarás toda la configuración de jugadores y luchadores.","Terminar partida",finishGameNow));
+$("sheetResetDefaultsBtn").addEventListener("click",()=>askConfirm("¿Restaurar datos de ejemplo?","Esto reemplaza tu configuración actual por los 6 jugadores y 18 luchadores originales.","Restaurar",resetDefaults));
+$("confirmCancelBtn").addEventListener("click",closeConfirm);
+$("confirmBackdrop").addEventListener("click",closeConfirm);
+$("confirmOkBtn").addEventListener("click",()=>{const fn=pendingConfirm;pendingConfirm=null;if(fn)fn()});
+
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"){saveConfig();saveGame()}});
+
+renderSetup();updateChrome();
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
